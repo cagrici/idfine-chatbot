@@ -833,7 +833,7 @@
     <div id="globalModal"></div>
 
     <script>
-        const API = 'http://localhost:8000';
+        const API = location.protocol + '//' + location.host;
         let token = null;
         let currentUser = null;
         let userPermissions = [];
@@ -3362,7 +3362,7 @@
             }
 
             // Connect agent WS
-            lsAgentWs = new WebSocket(`ws://localhost:8000/ws/live-support/${convId}?token=${token}`);
+            lsAgentWs = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/live-support/${convId}?token=${token}`);
 
             lsAgentWs.onopen = () => {
                 console.log('Agent WS connected for', convId);
@@ -3903,7 +3903,7 @@
 
         function lsConnectNotifications() {
             if (lsNotifWs) { lsNotifWs.close(); lsNotifWs = null; }
-            lsNotifWs = new WebSocket(`ws://localhost:8000/ws/live-support/notifications?token=${token}`);
+            lsNotifWs = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/live-support/notifications?token=${token}`);
             lsRequestNotificationPermission();
 
             lsNotifWs.onmessage = (event) => {
@@ -4053,7 +4053,7 @@
         function initChatWS() {
             const statusEl = document.getElementById('chatWsStatus');
             try {
-                chatWs = new WebSocket(`ws://localhost:8000/ws/widget/admin-test-panel`);
+                chatWs = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/widget/admin-test-panel`);
                 chatWs.onopen = () => {
                     statusEl.textContent = 'WebSocket Bagli';
                     statusEl.style.background = '#c6f6d5';

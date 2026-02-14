@@ -68,6 +68,8 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./widget/dist:/usr/share/nginx/widget:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./test-admin.html:/usr/share/nginx/pages/test-admin.html:ro
+      - ./test-chat.html:/usr/share/nginx/pages/test-chat.html:ro
     depends_on:
       - backend
 

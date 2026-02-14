@@ -332,14 +332,14 @@
             <button id="sendBtn" disabled onclick="sendMessage()">Gönder</button>
         </div>
         <div class="info-bar">
-            <span>API: localhost:8000</span>
+            <span id="apiInfo">API</span>
             <span id="wsStatus" class="ws-badge disconnected">REST</span>
         </div>
     </div>
 
     <script>
-        const API = 'http://localhost:8000';
-        const WS_URL = 'ws://localhost:8000';
+        const API = location.protocol + '//' + location.host;
+        const WS_URL = (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host;
         let visitorId = null;
         let conversationId = null;
         let ws = null;
@@ -767,7 +767,7 @@
                 const resp = await fetch(`${API}/api/widget/init`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ domain: 'localhost', page_url: location.href })
+                    body: JSON.stringify({ domain: location.hostname, page_url: location.href })
                 });
                 const data = await resp.json();
 
