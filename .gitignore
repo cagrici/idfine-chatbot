@@ -1,0 +1,45 @@
+# Environment
+.env
+*.env.local
+.token
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Node
+node_modules/
+widget/dist/
+admin/dist/
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker volumes
+postgres_data/
+redis_data/
+qdrant_data/
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+
+# SSL certificates
+nginx/ssl/*.pem
+nginx/ssl/*.key
+
+# Claude
+.claude/

@@ -1,0 +1,55 @@
+services:
+  backend:
+    build: ./backend
+    container_name: idf-backend-dev
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - DEBUG=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      qdrant:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+      - ./uploads:/app/uploads
+      - model_cache:/root/.cache
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: idf-postgres-dev
+    environment:
+      POSTGRES_DB: ${DB_NAME:-idf_chatbot}
+      POSTGRES_USER: ${DB_USER:-idf_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-idf_local_dev_2026}
+    # No host port mapping - accessed only via internal network
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U idf_user -d idf_chatbot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: idf-redis-dev
+    # No host port mapping - accessed only via internal network
+
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    container_name: idf-qdrant-dev
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_dev_data:/qdrant/storage
+
+volumes:
+  postgres_dev_data:
+  qdrant_dev_data:
+  model_cache:

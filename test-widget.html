@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Test Sayfası</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 60px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #231f20; }
+        p { color: #666; line-height: 1.8; }
+    </style>
+</head>
+<body>
+    <h1>idfine Widget Test Sayfası</h1>
+    <p>Bu sayfa, idfine chat widget'ının test edilmesi için oluşturulmuştur.</p>
+    <p>Sağ alt köşede idfine logosunu görmelisiniz. Tıklayarak sohbet penceresini açabilirsiniz.</p>
+    <p>Widget özellikleri:</p>
+    <ul>
+        <li>Shadow DOM ile stil izolasyonu</li>
+        <li>WebSocket ile gerçek zamanlı streaming</li>
+        <li>REST API fallback</li>
+        <li>Markdown rendering</li>
+        <li>Mobil uyumlu tasarım</li>
+    </ul>
+
+    <script src="widget/dist/idfine-chat.js"
+        data-api-url="http://localhost:8000"
+        data-brand-color="#231f20"
+        data-brand-name="idfine"
+    ></script>
+</body>
+</html>

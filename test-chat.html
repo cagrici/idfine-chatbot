@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Fine AI Chatbot - Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #231f20;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header .status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .msg-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            margin-bottom: 0;
+        }
+
+        .msg-row.user-row {
+            justify-content: flex-end;
+        }
+
+        .msg-avatar {
+            width: 50px;
+            flex-shrink: 0;
+            padding-right: 10px;
+            margin-top: 2px;
+        }
+
+        .msg-avatar img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            line-height: 1.6;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            white-space: pre-wrap;
+        }
+
+        .message.assistant h3,
+        .message.assistant h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 8px 0 4px;
+        }
+
+        .message.assistant h3:first-child,
+        .message.assistant h4:first-child {
+            margin-top: 0;
+        }
+
+        .message.assistant strong {
+            font-weight: 600;
+        }
+
+        .message.assistant em {
+            font-style: italic;
+        }
+
+        .message.assistant ul,
+        .message.assistant ol {
+            margin: 4px 0 4px 18px;
+            padding: 0;
+        }
+
+        .message.assistant li {
+            margin-bottom: 2px;
+        }
+
+        .message.assistant p {
+            margin: 4px 0;
+        }
+
+        .message.assistant p:first-child {
+            margin-top: 0;
+        }
+
+        .message.assistant p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: #231f20;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: #f0f2f5;
+            color: #1a202c;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.assistant.streaming {
+            position: relative;
+        }
+
+        .message.assistant.streaming::after {
+            content: '';
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #231f20;
+            margin-left: 2px;
+            vertical-align: text-bottom;
+            animation: cursor-blink 0.7s steps(1) infinite;
+        }
+
+        @keyframes cursor-blink {
+
+            0%,
+            50% {
+                opacity: 1
+            }
+
+            51%,
+            100% {
+                opacity: 0
+            }
+        }
+
+        .message.system {
+            align-self: center;
+            background: #fff3cd;
+            color: #856404;
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+
+        .message.error {
+            align-self: center;
+            background: #f8d7da;
+            color: #721c24;
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            padding: 10px 14px;
+            background: #f0f2f5;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            display: none;
+        }
+
+        .typing-indicator.visible {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing-indicator .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #a0aec0;
+            animation: typing-bounce 1.4s ease-in-out infinite;
+        }
+
+        .typing-indicator .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing-bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .message.assistant.streaming {
+            white-space: pre-wrap;
+        }
+
+        .input-area {
+            padding: 16px 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-area input:focus {
+            border-color: #231f20;
+        }
+
+        .input-area button {
+            padding: 10px 20px;
+            background: #231f20;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .input-area button:hover {
+            background: #2a4a7f;
+        }
+
+        .input-area button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .info-bar {
+            padding: 8px 20px;
+            background: #edf2f7;
+            font-size: 11px;
+            color: #718096;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-bar .ws-badge {
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .info-bar .ws-badge.connected {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .info-bar .ws-badge.disconnected {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="header">
+            <img src="images/logo-light-mobile.png" alt="idfine" style="width:32px;height:32px;object-fit:contain">
+            <h1>ID Fine AI Chatbot</h1>
+            <span class="status" id="status" style="background:#ecc94b">Bağlanıyor...</span>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="input" placeholder="Mesajınızı yazın..." disabled autocomplete="off">
+            <button id="sendBtn" disabled onclick="sendMessage()">Gönder</button>
+        </div>
+        <div class="info-bar">
+            <span>API: localhost:8000</span>
+            <span id="wsStatus" class="ws-badge disconnected">REST</span>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8000';
+        const WS_URL = 'ws://localhost:8000';
+        let visitorId = null;
+        let conversationId = null;
+        let ws = null;
+        let isStreaming = false;
+
+        const messagesEl = document.getElementById('messages');
+        const inputEl = document.getElementById('input');
+        const sendBtn = document.getElementById('sendBtn');
+        const statusEl = document.getElementById('status');
+        const typingEl = document.getElementById('typingIndicator');
+        const wsStatusEl = document.getElementById('wsStatus');
+
+        inputEl.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !sendBtn.disabled) sendMessage();
+        });
+
+        let _widgetTypingSent = 0;
+        inputEl.addEventListener('input', () => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            const now = Date.now();
+            if (now - _widgetTypingSent < 2000) return;
+            _widgetTypingSent = now;
+            ws.send(JSON.stringify({ type: 'typing' }));
+        });
+
+        function scrollToBottom() {
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function renderMarkdown(text) {
+            if (!text) return '';
+            let html = text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            // Headings
+            html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+            html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+            html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+            // Bold + italic
+            html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            // Unordered lists
+            html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+            // Ordered lists
+            html = html.replace(/^\d+\.\s+(.+)$/gm, '<oli>$1</oli>');
+            html = html.replace(/((?:<oli>.*<\/oli>\n?)+)/g, function (m) {
+                return '<ol>' + m.replace(/<\/?oli>/g, function (t) { return t.replace('oli', 'li'); }) + '</ol>';
+            });
+            // Paragraphs
+            html = html.replace(/\n{2,}/g, '</p><p>');
+            html = html.replace(/\n/g, '<br>');
+            html = '<p>' + html + '</p>';
+            // Clean empty paragraphs around block elements
+            html = html.replace(/<p>\s*(<(?:ul|ol|h[34]))/g, '$1');
+            html = html.replace(/(<\/(?:ul|ol|h[34])>)\s*<\/p>/g, '$1');
+            html = html.replace(/<p>\s*<\/p>/g, '');
+            // Remove <br> inside lists (between </li> and <li>, after <ul>/<ol>, before </ul>/</ol>)
+            html = html.replace(/<\/li>\s*<br>\s*/g, '</li>');
+            html = html.replace(/<ul>\s*<br>/g, '<ul>');
+            html = html.replace(/<ol>\s*<br>/g, '<ol>');
+            html = html.replace(/<br>\s*<\/ul>/g, '</ul>');
+            html = html.replace(/<br>\s*<\/ol>/g, '</ol>');
+            // Remove <br> after block elements (h3, h4, ul, ol)
+            html = html.replace(/<\/h[34]>\s*<br>/g, function (m) { return m.replace(/<br>/, ''); });
+            html = html.replace(/<\/ul>\s*<br>/g, '</ul>');
+            html = html.replace(/<\/ol>\s*<br>/g, '</ol>');
+            return html;
+        }
+
+        function addMessage(text, role) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            if (role === 'assistant') {
+                div.innerHTML = renderMarkdown(text);
+                const row = document.createElement('div');
+                row.className = 'msg-row';
+                row.innerHTML = '<div class="msg-avatar"><img src="images/logo-dark-mobile.png" alt="AI"></div>';
+                row.appendChild(div);
+                messagesEl.appendChild(row);
+            } else if (role === 'user') {
+                div.textContent = text;
+                const row = document.createElement('div');
+                row.className = 'msg-row user-row';
+                row.appendChild(div);
+                messagesEl.appendChild(row);
+            } else {
+                div.textContent = text;
+                messagesEl.appendChild(div);
+            }
+            scrollToBottom();
+            return div;
+        }
+
+        function showRatingUI(convId) {
+            const div = document.createElement('div');
+            div.className = 'message system';
+            div.style.cssText = 'text-align:center;background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:16px;margin:12px auto;max-width:280px';
+            div.innerHTML = `
+                <div style="font-size:14px;font-weight:600;margin-bottom:8px">Hizmetimizi degerlendirin</div>
+                <div id="ratingStars" style="font-size:28px;cursor:pointer;margin-bottom:10px">
+                    <span onclick="submitRating('${convId}',1)" onmouseover="highlightStars(1)" onmouseout="resetStars()">&#9734;</span>
+                    <span onclick="submitRating('${convId}',2)" onmouseover="highlightStars(2)" onmouseout="resetStars()">&#9734;</span>
+                    <span onclick="submitRating('${convId}',3)" onmouseover="highlightStars(3)" onmouseout="resetStars()">&#9734;</span>
+                    <span onclick="submitRating('${convId}',4)" onmouseover="highlightStars(4)" onmouseout="resetStars()">&#9734;</span>
+                    <span onclick="submitRating('${convId}',5)" onmouseover="highlightStars(5)" onmouseout="resetStars()">&#9734;</span>
+                </div>
+                <textarea id="ratingComment" placeholder="Yorumunuz (istege bagli)" rows="2" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:6px;font-size:12px;resize:none"></textarea>
+            `;
+            messagesEl.appendChild(div);
+            scrollToBottom();
+        }
+
+        function highlightStars(n) {
+            const stars = document.querySelectorAll('#ratingStars span');
+            stars.forEach((s, i) => { s.textContent = i < n ? '\u2605' : '\u2606'; s.style.color = i < n ? '#f59e0b' : '#d1d5db'; });
+        }
+        function resetStars() {
+            const stars = document.querySelectorAll('#ratingStars span');
+            stars.forEach(s => { if (!s.dataset.selected) { s.textContent = '\u2606'; s.style.color = '#d1d5db'; } });
+        }
+
+        async function submitRating(convId, rating) {
+            highlightStars(rating);
+            document.querySelectorAll('#ratingStars span').forEach((s, i) => { if (i < rating) s.dataset.selected = '1'; });
+            const comment = (document.getElementById('ratingComment')?.value || '').trim();
+            try {
+                await fetch(`${API}/api/widget/rate/${convId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rating, comment })
+                });
+                const ratingDiv = document.getElementById('ratingStars')?.parentElement;
+                if (ratingDiv) ratingDiv.innerHTML = `<div style="font-size:14px;color:#059669;font-weight:600">Tesekkurler! ${rating}/5 puan verdiniz.</div>`;
+            } catch (e) { console.error('Rating failed', e); }
+        }
+
+        function createStreamingBubble() {
+            const row = document.createElement('div');
+            row.className = 'msg-row';
+            row.innerHTML = '<div class="msg-avatar"><img src="images/logo-dark-mobile.png" alt="AI"></div>';
+            const div = document.createElement('div');
+            div.className = 'message assistant streaming';
+            div.textContent = '';
+            row.appendChild(div);
+            messagesEl.appendChild(row);
+            scrollToBottom();
+            return div;
+        }
+
+        // --- WebSocket ---
+        function connectWS() {
+            if (!visitorId) return;
+            try {
+                ws = new WebSocket(`${WS_URL}/ws/widget/${visitorId}`);
+
+                ws.onopen = () => {
+                    wsStatusEl.textContent = 'WebSocket';
+                    wsStatusEl.className = 'ws-badge connected';
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    handleStream(data);
+                };
+
+                ws.onclose = () => {
+                    ws = null;
+                    wsStatusEl.textContent = 'REST';
+                    wsStatusEl.className = 'ws-badge disconnected';
+                    // Reconnect after 3s
+                    setTimeout(connectWS, 3000);
+                };
+
+                ws.onerror = () => { ws = null; };
+            } catch (e) {
+                console.log('WebSocket failed:', e);
+            }
+        }
+
+        // --- Streaming handler (shared by WS and REST-simulate) ---
+        let streamEl = null;
+        let streamText = '';
+
+        function handleStream(data) {
+            switch (data.type) {
+                case 'stream_start':
+                    typingEl.classList.remove('visible');
+                    streamText = '';
+                    streamEl = createStreamingBubble();
+                    isStreaming = true;
+                    break;
+
+                case 'stream_chunk':
+                    if (streamEl) {
+                        streamText += data.content;
+                        streamEl.textContent = streamText;
+                        scrollToBottom();
+                    }
+                    break;
+
+                case 'stream_end':
+                    if (streamEl) {
+                        streamEl.classList.remove('streaming');
+                        streamEl.innerHTML = renderMarkdown(streamText);
+                        // Quick action buttons (Feature 7)
+                        if (data.quick_actions) addQuickActions(streamEl, data.quick_actions);
+                        // Product cards (Feature 8)
+                        if (data.products && data.products.length) {
+                            data.products.forEach(p => streamEl.appendChild(renderProductCard(p)));
+                        }
+                    }
+                    typingEl.classList.remove('visible');
+                    if (data.conversation_id) conversationId = data.conversation_id;
+                    streamEl = null;
+                    isStreaming = false;
+                    inputEl.disabled = false;
+                    sendBtn.disabled = false;
+                    inputEl.focus();
+                    saveChatHistory(); // Feature 5
+                    break;
+
+                case 'typing':
+                    typingEl.classList.add('visible');
+                    clearTimeout(window._agentTypingTimeout);
+                    window._agentTypingTimeout = setTimeout(() => typingEl.classList.remove('visible'), 3000);
+                    break;
+
+                case 'system':
+                    if (data.event === 'request_rating') {
+                        showRatingUI(data.conversation_id || conversationId);
+                    } else {
+                        addMessage(data.content, 'system');
+                    }
+                    break;
+
+                case 'error':
+                    typingEl.classList.remove('visible');
+                    if (streamEl) {
+                        streamEl.classList.remove('streaming');
+                    }
+                    addMessage('Hata: ' + data.message, 'error');
+                    streamEl = null;
+                    isStreaming = false;
+                    inputEl.disabled = false;
+                    sendBtn.disabled = false;
+                    break;
+            }
+        }
+
+        // --- REST fallback with simulated typing ---
+        async function sendViaREST(text) {
+            try {
+                const resp = await fetch(`${API}/api/widget/message`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Visitor-ID': visitorId
+                    },
+                    body: JSON.stringify({ content: text, conversation_id: conversationId })
+                });
+
+                typingEl.classList.remove('visible');
+
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+                    addMessage('Hata: ' + (err.detail || JSON.stringify(err)), 'error');
+                    inputEl.disabled = false;
+                    sendBtn.disabled = false;
+                    return;
+                }
+
+                const data = await resp.json();
+                conversationId = data.conversation_id;
+
+                // Simulate typing effect for REST response
+                const bubble = createStreamingBubble();
+                const fullText = data.content;
+                let i = 0;
+
+                await new Promise(resolve => {
+                    const interval = setInterval(() => {
+                        const chunkSize = Math.floor(Math.random() * 6) + 3;
+                        i += chunkSize;
+                        if (i >= fullText.length) {
+                            bubble.innerHTML = renderMarkdown(fullText);
+                            bubble.classList.remove('streaming');
+                            clearInterval(interval);
+                            resolve();
+                        } else {
+                            bubble.textContent = fullText.substring(0, i);
+                            scrollToBottom();
+                        }
+                    }, 20);
+                });
+            } catch (err) {
+                typingEl.classList.remove('visible');
+                addMessage('Bağlantı hatası: ' + err.message, 'error');
+            }
+            inputEl.disabled = false;
+            sendBtn.disabled = false;
+            inputEl.focus();
+        }
+
+        // --- Send ---
+        async function sendMessage() {
+            const text = inputEl.value.trim();
+            if (!text || isStreaming) return;
+
+            addMessage(text, 'user');
+            inputEl.value = '';
+            inputEl.disabled = true;
+            sendBtn.disabled = true;
+            typingEl.classList.add('visible');
+            scrollToBottom();
+            saveChatHistory(); // Feature 5
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'message',
+                    content: text,
+                    conversation_id: conversationId
+                }));
+            } else {
+                await sendViaREST(text);
+            }
+        }
+
+        // --- Chat History Persistence (Feature 5) ---
+        function saveChatHistory() {
+            if (!visitorId) return;
+            const msgs = [];
+            document.querySelectorAll('#messages .message').forEach(el => {
+                const isUser = el.classList.contains('user') && !el.classList.contains('system');
+                const isAssistant = el.classList.contains('assistant');
+                if (isUser) msgs.push({ role: 'user', text: el.textContent });
+                else if (isAssistant) msgs.push({ role: 'assistant', html: el.innerHTML });
+            });
+            try {
+                localStorage.setItem('idf_chat_' + visitorId, JSON.stringify({ msgs, convId: conversationId, ts: Date.now() }));
+            } catch (e) { /* quota exceeded */ }
+        }
+
+        function restoreChatHistory(vid) {
+            try {
+                const raw = localStorage.getItem('idf_chat_' + vid);
+                if (!raw) return false;
+                const data = JSON.parse(raw);
+                // Only restore if less than 24 hours old
+                if (Date.now() - data.ts > 86400000) { localStorage.removeItem('idf_chat_' + vid); return false; }
+                if (data.convId) conversationId = data.convId;
+                data.msgs.forEach(m => {
+                    if (m.role === 'assistant') {
+                        const div = document.createElement('div');
+                        div.className = 'message assistant';
+                        div.innerHTML = m.html;
+                        const row = document.createElement('div');
+                        row.className = 'msg-row';
+                        row.innerHTML = '<div class="msg-avatar"><img src="images/logo-dark-mobile.png" alt="AI"></div>';
+                        row.appendChild(div);
+                        messagesEl.appendChild(row);
+                    } else {
+                        const div = document.createElement('div');
+                        div.className = 'message user';
+                        div.textContent = m.text;
+                        const row = document.createElement('div');
+                        row.className = 'msg-row user-row';
+                        row.appendChild(div);
+                        messagesEl.appendChild(row);
+                    }
+                });
+                scrollToBottom();
+                return true;
+            } catch (e) { return false; }
+        }
+
+        // --- Quick Action Buttons (Feature 7) ---
+        function addQuickActions(messageDiv, actions) {
+            if (!actions || !actions.length) return;
+            const container = document.createElement('div');
+            container.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:8px';
+            actions.forEach(action => {
+                const btn = document.createElement('button');
+                btn.textContent = action.label || action;
+                btn.style.cssText = 'padding:5px 12px;background:#f0f2f5;border:1px solid #d1d5db;border-radius:16px;font-size:12px;cursor:pointer;color:#231f20;transition:background 0.15s';
+                btn.onmouseover = () => btn.style.background = '#e2e8f0';
+                btn.onmouseout = () => btn.style.background = '#f0f2f5';
+                btn.onclick = () => {
+                    const text = action.value || action.label || action;
+                    inputEl.value = text;
+                    sendMessage();
+                    container.remove();
+                };
+                container.appendChild(btn);
+            });
+            messageDiv.appendChild(container);
+        }
+
+        // --- Product Card Rendering (Feature 8) ---
+        function renderProductCard(product) {
+            const card = document.createElement('div');
+            card.style.cssText = 'border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-top:8px;max-width:280px;background:white';
+            let imgHtml = '';
+            if (product.image_url) {
+                imgHtml = `<img src="${product.image_url}" alt="${product.name || ''}" style="width:100%;height:160px;object-fit:cover">`;
+            }
+            card.innerHTML = `
+                ${imgHtml}
+                <div style="padding:10px">
+                    <div style="font-weight:600;font-size:14px;color:#1a202c">${product.name || ''}</div>
+                    ${product.price ? `<div style="font-size:16px;font-weight:700;color:#231f20;margin:4px 0">${product.price}</div>` : ''}
+                    ${product.description ? `<div style="font-size:12px;color:#718096;margin-top:4px">${product.description.substring(0, 100)}</div>` : ''}
+                    ${product.url ? `<a href="${product.url}" target="_blank" style="display:inline-block;margin-top:8px;padding:5px 12px;background:#231f20;color:white;border-radius:6px;font-size:12px;text-decoration:none">Detay</a>` : ''}
+                </div>
+            `;
+            return card;
+        }
+
+        // --- Init ---
+        async function init() {
+            // Check for existing session (Feature 5)
+            const savedVisitorId = localStorage.getItem('idf_visitor_id');
+
+            try {
+                const resp = await fetch(`${API}/api/widget/init`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ domain: 'localhost', page_url: location.href })
+                });
+                const data = await resp.json();
+
+                // Reuse visitor ID if exists, otherwise use new one
+                if (savedVisitorId) {
+                    visitorId = savedVisitorId;
+                    const restored = restoreChatHistory(visitorId);
+                    if (!restored) {
+                        addMessage(data.config.welcome_message, 'assistant');
+                    }
+                } else {
+                    visitorId = data.visitor_id;
+                    localStorage.setItem('idf_visitor_id', visitorId);
+                    addMessage(data.config.welcome_message, 'assistant');
+                }
+
+                statusEl.textContent = 'Bağlı';
+                statusEl.style.background = '#48bb78';
+                inputEl.disabled = false;
+                sendBtn.disabled = false;
+                inputEl.focus();
+
+                connectWS();
+            } catch (err) {
+                addMessage('Bağlantı hatası: ' + err.message, 'error');
+                statusEl.textContent = 'Hata';
+                statusEl.style.background = '#fc8181';
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

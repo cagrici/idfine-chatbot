@@ -1,0 +1,42 @@
+[project]
+name = "idfine-chatbot"
+version = "1.0.0"
+description = "idfine AI Chatbot - RAG + Odoo ERP entegrasyonlu müşteri destek sistemi"
+requires-python = ">=3.11"
+
+dependencies = [
+    "fastapi[standard]>=0.115",
+    "uvicorn[standard]>=0.32",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "alembic>=1.14",
+    "anthropic>=0.42",
+    "qdrant-client>=1.13",
+    "redis>=5.2",
+    "python-jose[cryptography]>=3.3",
+    "passlib[bcrypt]>=1.7",
+    "python-multipart>=0.0.18",
+    "python-docx>=1.1",
+    "pymupdf>=1.25",
+    "sentence-transformers>=3.4",
+    "pydantic-settings>=2.7",
+    "pydantic[email]>=2.10",
+    "httpx>=0.28",
+    "websockets>=14.0",
+    "pymysql>=1.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.28",
+    "ruff>=0.8",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
