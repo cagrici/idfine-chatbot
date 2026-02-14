@@ -70,6 +70,7 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./test-admin.html:/usr/share/nginx/pages/test-admin.html:ro
       - ./test-chat.html:/usr/share/nginx/pages/test-chat.html:ro
+      - ./images:/usr/share/nginx/images:ro
     depends_on:
       - backend
 
