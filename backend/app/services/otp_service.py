@@ -91,7 +91,10 @@ class OTPService:
                 partner_name = partners[0].get("name", "")
         except Exception as e:
             logger.error("Odoo partner lookup failed: %s", e)
-            # Continue anyway - we'll store OTP but won't be able to verify later
+            return OTPResult(
+                success=False,
+                message="Kimlik dogrulama sistemi su anda kullanilamamaktadir. Lutfen daha sonra tekrar deneyin.",
+            )
 
         # Generate 6-digit code
         code = f"{secrets.randbelow(900000) + 100000}"

@@ -183,9 +183,11 @@ class ChatService:
                 conv_id_str, user_message, visitor_id or ""
             )
             if flow_result:
-                return await self._save_and_return(
-                    conv, flow_result.message, Intent.CUSTOMER_AUTH, [], None
-                )
+                # If flow was cancelled with empty message, fall through to normal processing
+                if not (flow_result.flow_cancelled and not flow_result.message):
+                    return await self._save_and_return(
+                        conv, flow_result.message, Intent.CUSTOMER_AUTH, [], None
+                    )
 
         # Classify intent
         intent = await self.classifier.classify(user_message)
@@ -306,32 +308,36 @@ class ChatService:
                 conv_id_str, user_message, visitor_id or ""
             )
             if flow_result:
-                intent = Intent.CUSTOMER_AUTH
-                user_msg.intent = intent.value
+                # If flow was cancelled with empty message, fall through to normal processing
+                if flow_result.flow_cancelled and not flow_result.message:
+                    pass  # Continue to Step 2 (intent classification)
+                else:
+                    intent = Intent.CUSTOMER_AUTH
+                    user_msg.intent = intent.value
 
-                yield {"type": "stream_start", "message_id": message_id}
-                yield {"type": "stream_chunk", "content": flow_result.message, "message_id": message_id}
-                yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": intent.value}
-                await self._save_assistant_message(conv.id, flow_result.message, intent, [], None)
+                    yield {"type": "stream_start", "message_id": message_id}
+                    yield {"type": "stream_chunk", "content": flow_result.message, "message_id": message_id}
+                    yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": intent.value}
+                    await self._save_assistant_message(conv.id, flow_result.message, intent, [], None)
 
-                # If OTP flow completed successfully, re-process original intent
-                if flow_result.flow_completed and flow_result.data.get("original_intent"):
-                    original_intent_str = flow_result.data["original_intent"]
-                    try:
-                        original_intent = Intent(original_intent_str)
-                        customer_data = await self._handle_customer_intent(
-                            original_intent, user_message, flow_result.data.get("partner_id"), visitor_id
-                        )
-                        if customer_data:
-                            history = await self.get_conversation_history(conv.id)
-                            async for chunk in self._stream_llm_response(
-                                user_message, "", [], "", customer_data,
-                                history, message_id, conv, original_intent
-                            ):
-                                yield chunk
-                    except (ValueError, Exception) as e:
-                        logger.error("Error re-processing original intent: %s", e)
-                return
+                    # If OTP flow completed successfully, re-process original intent
+                    if flow_result.flow_completed and flow_result.data.get("original_intent"):
+                        original_intent_str = flow_result.data["original_intent"]
+                        try:
+                            original_intent = Intent(original_intent_str)
+                            customer_data = await self._handle_customer_intent(
+                                original_intent, user_message, flow_result.data.get("partner_id"), visitor_id
+                            )
+                            if customer_data:
+                                history = await self.get_conversation_history(conv.id)
+                                async for chunk in self._stream_llm_response(
+                                    user_message, "", [], "", customer_data,
+                                    history, message_id, conv, original_intent
+                                ):
+                                    yield chunk
+                        except (ValueError, Exception) as e:
+                            logger.error("Error re-processing original intent: %s", e)
+                    return
 
         # --- Step 2: Classify intent ---
         intent = await self.classifier.classify(user_message)

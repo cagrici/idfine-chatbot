@@ -68,8 +68,15 @@ class OTPFlowHandler(FlowHandler):
             email = email_match.group(0)
 
         if not EMAIL_REGEX.match(email):
+            # If the message looks like a normal question rather than an email attempt,
+            # cancel the flow so the user can continue chatting
+            if len(user_message.strip()) > 15 and "@" not in user_message:
+                return FlowStepResult(
+                    message="",
+                    flow_cancelled=True,
+                )
             return FlowStepResult(
-                message="Gecerli bir e-posta adresi giriniz. Ornegin: isim@firma.com",
+                message="Gecerli bir e-posta adresi giriniz. Ornegin: isim@firma.com\nDogrulamayi iptal etmek icin 'iptal' yazin.",
             )
 
         # Request OTP
@@ -96,8 +103,15 @@ class OTPFlowHandler(FlowHandler):
             code = code_match.group(0)
 
         if not CODE_REGEX.match(code):
+            # If the message looks like a normal question (long text, no digits),
+            # cancel the flow so the user can continue chatting
+            if len(user_message.strip()) > 10 and not re.search(r"\d", user_message):
+                return FlowStepResult(
+                    message="",
+                    flow_cancelled=True,
+                )
             return FlowStepResult(
-                message="Lutfen 6 haneli dogrulama kodunu giriniz.",
+                message="Lutfen 6 haneli dogrulama kodunu giriniz. Dogrulamayi iptal etmek icin 'iptal' yazin.",
             )
 
         email = flow.data.get("email", "")
