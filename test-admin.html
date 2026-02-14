@@ -4442,7 +4442,7 @@
 
         function generateWidgetCode() {
             const v = getWidgetFormValues();
-            const apiUrl = v.domain ? (v.domain.startsWith('http') ? v.domain : 'https://' + v.domain) : 'https://chat.idfine.com';
+            const apiUrl = v.domain ? (v.domain.startsWith('http') ? v.domain : 'https://' + v.domain) : 'https://chat.codsol.fi';
             const scriptUrl = apiUrl + '/widget/idfine-chat.js';
 
             let attrs = [`data-api-url="${apiUrl}"`];
