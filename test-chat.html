@@ -317,7 +317,7 @@
 <body>
     <div class="chat-container">
         <div class="header">
-            <img src="images/logo-light-mobile.png" alt="idfine" style="width:32px;height:32px;object-fit:contain">
+            <img src="/images/logo-light-mobile.png" alt="idfine" style="width:32px;height:32px;object-fit:contain">
             <h1>ID Fine AI Chatbot</h1>
             <span class="status" id="status" style="background:#ecc94b">Bağlanıyor...</span>
         </div>
@@ -417,7 +417,7 @@
                 div.innerHTML = renderMarkdown(text);
                 const row = document.createElement('div');
                 row.className = 'msg-row';
-                row.innerHTML = '<div class="msg-avatar"><img src="images/logo-dark-mobile.png" alt="AI"></div>';
+                row.innerHTML = '<div class="msg-avatar"><img src="/images/logo-dark-mobile.png" alt="AI"></div>';
                 row.appendChild(div);
                 messagesEl.appendChild(row);
             } else if (role === 'user') {
@@ -480,7 +480,7 @@
         function createStreamingBubble() {
             const row = document.createElement('div');
             row.className = 'msg-row';
-            row.innerHTML = '<div class="msg-avatar"><img src="images/logo-dark-mobile.png" alt="AI"></div>';
+            row.innerHTML = '<div class="msg-avatar"><img src="/images/logo-dark-mobile.png" alt="AI"></div>';
             const div = document.createElement('div');
             div.className = 'message assistant streaming';
             div.textContent = '';
@@ -698,7 +698,7 @@
                         div.innerHTML = m.html;
                         const row = document.createElement('div');
                         row.className = 'msg-row';
-                        row.innerHTML = '<div class="msg-avatar"><img src="images/logo-dark-mobile.png" alt="AI"></div>';
+                        row.innerHTML = '<div class="msg-avatar"><img src="/images/logo-dark-mobile.png" alt="AI"></div>';
                         row.appendChild(div);
                         messagesEl.appendChild(row);
                     } else {
