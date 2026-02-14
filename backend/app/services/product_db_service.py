@@ -251,8 +251,9 @@ class ProductDBService:
             "mi", "mı", "mu", "mü", "ne", "nedir", "nasıl", "nasil",
             "kadar", "var", "yok", "lütfen", "lutfen",
             "istiyorum", "göster", "goster", "bana", "hakkında", "hakkinda",
-            "bilgi", "ürünler", "urunler", "listele", "öner", "oner",
-            "tavsiye", "hangi", "hangisi", "tane", "adet",
+            "bilgi", "ürünler", "urunler", "ürün", "urun", "listele",
+            "öner", "oner", "tavsiye", "hangi", "hangisi", "tane", "adet",
+            "kodlu", "kodunu", "kodu",
             # Question/request words
             "misiniz", "musunuz", "mısınız", "müsünüz", "misin", "musun",
             "önerir", "onerir", "önerebilir", "onerebilir", "söyler",
@@ -268,9 +269,17 @@ class ProductDBService:
             "do", "you", "have", "show", "me", "please", "recommend",
             "price", "stock", "about", "tell", "much", "many",
         }
+        # Extract product codes (e.g. AVN-CLSKS17) before cleaning
+        product_codes = re.findall(r'[A-Za-z]{2,}-[A-Za-z0-9]+', query)
+
         # Clean and split
         text = re.sub(r"[^\w\sçğıöşüÇĞİÖŞÜ]", " ", query.lower())
         words = text.split()
         # Filter stop words and very short words
         keywords = [w for w in words if w not in stop_words and len(w) >= 2]
+
+        # Prepend intact product codes (they search better as whole codes)
+        if product_codes:
+            keywords = [code.upper() for code in product_codes] + keywords
+
         return keywords
