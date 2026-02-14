@@ -3,9 +3,9 @@ services:
     build: ./backend
     container_name: idf-backend
     restart: unless-stopped
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
-    ports:
-      - "8000:8000"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+    expose:
+      - "8000"
     env_file: .env
     depends_on:
       postgres:
@@ -16,8 +16,6 @@ services:
         condition: service_started
     volumes:
       - ./uploads:/app/uploads
-      - ./backend/app:/app/app
-      - ./backend/scripts:/app/scripts
 
   postgres:
     image: postgres:16-alpine
@@ -27,8 +25,8 @@ services:
       POSTGRES_DB: ${DB_NAME:-idf_chatbot}
       POSTGRES_USER: ${DB_USER:-idf_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -41,19 +39,19 @@ services:
     image: redis:7-alpine
     container_name: idf-redis
     restart: unless-stopped
-    ports:
-      - "6380:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
 
   qdrant:
     image: qdrant/qdrant:v1.13.2
     container_name: idf-qdrant
     restart: unless-stopped
-    ports:
-      - "6333:6333"
-      - "6334:6334"
+    expose:
+      - "6333"
+      - "6334"
     volumes:
       - qdrant_data:/qdrant/storage
     environment:
