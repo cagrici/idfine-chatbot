@@ -199,7 +199,10 @@ class ProductDBService:
             if p.get('dayanim_seviyesi'):
                 parts.append(f"  Dayanım: {p['dayanim_seviyesi']}")
             if p.get('image_url'):
-                parts.append(f"  Resim: {p['image_url']}")
+                img = p['image_url']
+                if img.startswith('/'):
+                    img = f"https://chat.codsol.fi{img}"
+                parts.append(f"  Resim: {img}")
             lines.append("\n".join(parts))
 
         return "\n---\n".join(lines)
