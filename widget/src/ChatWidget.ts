@@ -145,6 +145,29 @@ export class ChatWidget {
       this.textarea.style.height =
         Math.min(this.textarea.scrollHeight, 100) + "px";
     });
+
+    // Image thumbnail click → lightbox
+    this.container.addEventListener("click", (e) => {
+      const img = (e.target as HTMLElement).closest(".idf-img-thumb") as HTMLImageElement;
+      if (img) {
+        this.openLightbox(img.getAttribute("data-full") || img.src);
+      }
+    });
+  }
+
+  private openLightbox(src: string) {
+    const overlay = document.createElement("div");
+    overlay.className = "idf-lightbox";
+    overlay.innerHTML = `
+      <button class="idf-lightbox-close" aria-label="Kapat">&times;</button>
+      <img src="${src}" alt="Ürün">
+    `;
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay || (e.target as HTMLElement).closest(".idf-lightbox-close")) {
+        overlay.remove();
+      }
+    });
+    this.shadow.appendChild(overlay);
   }
 
   private async initSession() {

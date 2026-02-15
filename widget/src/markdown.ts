@@ -6,7 +6,15 @@
 export function renderMarkdown(text: string): string {
   if (!text) return "";
 
-  let html = text
+  // Extract images before HTML escaping, replace with placeholders
+  const images: string[] = [];
+  let processed = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt: string, url: string) => {
+    const idx = images.length;
+    images.push(`<img class="idf-img-thumb" src="${url}" alt="${alt}" data-full="${url}" loading="lazy">`);
+    return `%%IMG${idx}%%`;
+  });
+
+  let html = processed
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
@@ -50,6 +58,11 @@ export function renderMarkdown(text: string): string {
   html = html.replace(/<\/h[34]>\s*<br>/g, (m: string) => m.replace(/<br>/, ""));
   html = html.replace(/<\/ul>\s*<br>/g, "</ul>");
   html = html.replace(/<\/ol>\s*<br>/g, "</ol>");
+
+  // Restore image placeholders
+  images.forEach((imgTag, idx) => {
+    html = html.replace(`%%IMG${idx}%%`, imgTag);
+  });
 
   return html;
 }

@@ -186,9 +186,7 @@ class ProductDBService:
                 parts.append(f"  Fiyat: {p['fiyat']} {p.get('para_birimi', 'TRY')}")
             if p.get('stok') is not None:
                 stok_val = p['stok']
-                if stok_val > 1000:
-                    parts.append("  Stok: Mevcut")
-                elif stok_val > 0:
+                if stok_val > 0:
                     parts.append(f"  Stok: {stok_val} adet")
                 else:
                     parts.append("  Stok: Tükendi")
@@ -200,11 +198,19 @@ class ProductDBService:
                 parts.append(f"  İstiflenebilirlik: {p['istiflenebilirlik']}")
             if p.get('dayanim_seviyesi'):
                 parts.append(f"  Dayanım: {p['dayanim_seviyesi']}")
+            if p.get('image_url'):
+                parts.append(f"  Resim: {p['image_url']}")
             lines.append("\n".join(parts))
 
         return "\n---\n".join(lines)
 
     def _product_to_dict(self, p: Product) -> dict:
+        # Build image URL from product code if image field is not set
+        image_url = None
+        if p.image:
+            image_url = p.image
+        elif p.urun_kodu:
+            image_url = f"/images/{p.urun_kodu}.jpg"
         return {
             "id": p.id,
             "urun_kodu": p.urun_kodu,
@@ -227,6 +233,7 @@ class ProductDBService:
             "konsept_etiketler": p.konsept_etiketler,
             "istiflenebilirlik": p.istiflenebilirlik,
             "dayanim_seviyesi": p.dayanim_seviyesi,
+            "image_url": image_url,
         }
 
     @staticmethod

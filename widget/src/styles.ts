@@ -281,13 +281,66 @@ export function getStyles(config: WidgetConfig): string {
     .idf-message.assistant p:first-child { margin-top: 0; }
     .idf-message.assistant p:last-child { margin-bottom: 0; }
 
-    /* ── Sources ── */
-    .idf-sources {
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid #ddd;
-      font-size: 11px;
-      color: #666;
+    /* ── Product Images ── */
+    .idf-img-thumb {
+      max-width: 160px;
+      max-height: 160px;
+      border-radius: 8px;
+      margin: 6px 0;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      object-fit: cover;
+      display: block;
+    }
+
+    .idf-img-thumb:hover {
+      transform: scale(1.03);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+
+    /* ── Lightbox ── */
+    .idf-lightbox {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      animation: idf-lb-in 0.2s ease;
+    }
+
+    .idf-lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 8px;
+      object-fit: contain;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+
+    .idf-lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .idf-lightbox-close:hover { background: rgba(255,255,255,0.3); }
+
+    @keyframes idf-lb-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     /* ── Typing Indicator ── */
