@@ -258,7 +258,10 @@ class ProductDBService:
             "bilgi", "ürünler", "urunler", "ürün", "urun", "listele",
             "öner", "oner", "tavsiye", "hangi", "hangisi", "tane", "adet",
             "kodlu", "kodunu", "kodu",
-            # Question/request words
+            # Turkish noun declensions & question words
+            "ürünün", "urunun", "ürünü", "urunu", "ürünleri", "urunleri",
+            "adı", "adi", "adını", "adini", "adın", "adin",
+            "ismi", "ismini", "modeli", "modelin",
             "misiniz", "musunuz", "mısınız", "müsünüz", "misin", "musun",
             "önerir", "onerir", "önerebilir", "onerebilir", "söyler",
             "soyler", "verir", "bakar", "eder", "olur", "olabilir",
@@ -273,8 +276,8 @@ class ProductDBService:
             "do", "you", "have", "show", "me", "please", "recommend",
             "price", "stock", "about", "tell", "much", "many",
         }
-        # Extract product codes (e.g. AVN-CLSKS17) before cleaning
-        product_codes = re.findall(r'[A-Za-z]{2,}-[A-Za-z0-9]+', query)
+        # Extract product codes (e.g. AVN-CLSKS17 or 57001-163032) before cleaning
+        product_codes = re.findall(r'[A-Za-z0-9]{2,}-[A-Za-z0-9]+', query)
 
         # Clean and split
         text = re.sub(r"[^\w\sçğıöşüÇĞİÖŞÜ]", " ", query.lower())
