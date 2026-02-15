@@ -205,12 +205,6 @@ class ProductDBService:
         return "\n---\n".join(lines)
 
     def _product_to_dict(self, p: Product) -> dict:
-        # Build image URL from product code if image field is not set
-        image_url = None
-        if p.image:
-            image_url = p.image
-        elif p.urun_kodu:
-            image_url = f"/images/{p.urun_kodu}.jpg"
         return {
             "id": p.id,
             "urun_kodu": p.urun_kodu,
@@ -233,7 +227,7 @@ class ProductDBService:
             "konsept_etiketler": p.konsept_etiketler,
             "istiflenebilirlik": p.istiflenebilirlik,
             "dayanim_seviyesi": p.dayanim_seviyesi,
-            "image_url": image_url,
+            "image_url": p.image,
         }
 
     @staticmethod
