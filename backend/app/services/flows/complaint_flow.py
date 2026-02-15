@@ -1,4 +1,4 @@
-"""Complaint flow handler — collects complaint info, sends email, optionally creates Odoo ticket.
+"""Complaint flow handler — collects complaint info, sends email via SMTP, optionally creates Odoo ticket.
 
 Steps: await_name → await_contact → await_description → await_confirm → done
 If customer is authenticated, name/contact steps are skipped automatically.
@@ -14,24 +14,26 @@ from app.services.conversation_flow import (
     FlowType,
 )
 from app.services.customer_session_service import CustomerSessionService
+from app.services.email_service import EmailService
 from app.services.odoo_service import OdooService
 
 logger = logging.getLogger(__name__)
 
 COMPLAINT_EMAIL_TO = "destek@idfine.com.tr"
-COMPLAINT_EMAIL_FROM = "noreply@idfine.com"
 
 
 class ComplaintFlowHandler(FlowHandler):
-    """Collects complaint → sends email to support → optionally creates Odoo ticket."""
+    """Collects complaint → sends email via SMTP → optionally creates Odoo ticket."""
 
     def __init__(
         self,
         odoo_service: OdooService,
         session_service: CustomerSessionService,
+        email_service: EmailService | None = None,
     ):
         self.odoo = odoo_service
         self.session = session_service
+        self.email = email_service or EmailService()
 
     @property
     def flow_type(self) -> FlowType:
@@ -52,19 +54,21 @@ class ComplaintFlowHandler(FlowHandler):
             session = await self.session.get_session(visitor_id) if visitor_id else None
             if session:
                 flow.data["partner_id"] = session.partner_id
-                partner = await self.odoo.get_partner(session.partner_id)
-                if partner:
-                    flow.data["name"] = partner.name or ""
-                    flow.data["contact"] = partner.email or partner.phone or ""
-                    if flow.data["name"] and flow.data["contact"]:
-                        # Skip name and contact steps
-                        flow.step = "await_description"
-                        return FlowStepResult(
-                            message=(
-                                f"Sayin **{flow.data['name']}**, sikayetinizi almak istiyoruz.\n"
-                                "Lutfen sikayetinizi detayli olarak yaziniz."
-                            ),
-                        )
+                try:
+                    partner = await self.odoo.get_partner(session.partner_id)
+                    if partner:
+                        flow.data["name"] = partner.name or ""
+                        flow.data["contact"] = partner.email or partner.phone or ""
+                        if flow.data["name"] and flow.data["contact"]:
+                            flow.step = "await_description"
+                            return FlowStepResult(
+                                message=(
+                                    f"Sayin **{flow.data['name']}**, sikayetinizi almak istiyoruz.\n"
+                                    "Lutfen sikayetinizi detayli olarak yaziniz."
+                                ),
+                            )
+                except Exception as e:
+                    logger.warning("Could not fetch partner info from Odoo: %s", e)
 
         if step == "await_name":
             return await self._handle_name(flow, user_message)
@@ -173,7 +177,7 @@ class ComplaintFlowHandler(FlowHandler):
                     partner_id=partner_id,
                     subject=f"Musteri Sikayeti - {name}",
                     description=description,
-                    priority="2",  # Normal priority
+                    priority="2",
                 )
             except Exception as e:
                 logger.error("Failed to create complaint ticket in Odoo: %s", e)
@@ -181,7 +185,7 @@ class ComplaintFlowHandler(FlowHandler):
         if ticket_id:
             ticket_info = f"<p><strong>Odoo Talep No:</strong> #{ticket_id}</p>"
 
-        # Send email to support
+        # Send email via SMTP
         body_html = (
             "<h2>Yeni Musteri Sikayeti</h2>"
             f"<p><strong>Ad Soyad:</strong> {name}</p>"
@@ -194,15 +198,14 @@ class ComplaintFlowHandler(FlowHandler):
             f"<p>{description}</p>"
         )
 
-        try:
-            await self.odoo.send_email(
-                to=COMPLAINT_EMAIL_TO,
-                subject=f"Yeni Musteri Sikayeti - {name}",
-                body_html=body_html,
-                email_from=COMPLAINT_EMAIL_FROM,
-            )
-        except Exception as e:
-            logger.error("Failed to send complaint email: %s", e)
+        sent = self.email.send(
+            to=COMPLAINT_EMAIL_TO,
+            subject=f"Yeni Musteri Sikayeti - {name}",
+            body_html=body_html,
+        )
+
+        if not sent:
+            logger.error("Complaint email could not be sent for conv %s", conv_id)
             return FlowStepResult(
                 message=(
                     "Sikayetiniz iletilirken bir hata olustu. "

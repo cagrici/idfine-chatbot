@@ -60,6 +60,14 @@ class Settings(BaseSettings):
     otp_max_requests_per_hour: int = 3  # max OTP requests per email per hour
     customer_session_ttl_seconds: int = 7200  # 2 hours
 
+    # SMTP Email
+    smtp_host: str = ""
+    smtp_port: int = 465
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_use_tls: bool = True
+
     # Embedding
     embedding_model: str = "intfloat/multilingual-e5-large"
     embedding_dimension: int = 1024
