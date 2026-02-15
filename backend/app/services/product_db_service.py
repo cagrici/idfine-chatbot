@@ -260,8 +260,9 @@ class ProductDBService:
             "kodlu", "kodunu", "kodu",
             # Turkish noun declensions & question words
             "ürünün", "urunun", "ürünü", "urunu", "ürünleri", "urunleri",
-            "adı", "adi", "adını", "adini", "adın", "adin",
+            "adı", "adi", "adını", "adini", "adın", "adin", "adlı", "adli",
             "ismi", "ismini", "modeli", "modelin",
+            "resmi", "resim", "resmini", "resimler", "görseli", "gorseli",
             "misiniz", "musunuz", "mısınız", "müsünüz", "misin", "musun",
             "önerir", "onerir", "önerebilir", "onerebilir", "söyler",
             "soyler", "verir", "bakar", "eder", "olur", "olabilir",
