@@ -28,7 +28,7 @@ export class ChatWidget {
     this.config = {
       position: "bottom-right",
       brandColor: "#231f20",
-      brandName: "idfine",
+      brandName: "ID Fine",
       welcomeMessage: "Merhaba! Size nasıl yardımcı olabilirim?",
       placeholder: "Mesajınızı yazın...",
       width: 380,
@@ -70,7 +70,7 @@ export class ChatWidget {
 
     const triggerImg = document.createElement("img");
     triggerImg.src = this.logoUrl;
-    triggerImg.alt = this.config.brandName || "idfine";
+    triggerImg.alt = this.config.brandName || "ID Fine";
     triggerImg.draggable = false;
     this.triggerBtn.appendChild(triggerImg);
 
@@ -103,7 +103,7 @@ export class ChatWidget {
         <textarea rows="1" placeholder="${this.config.placeholder}"></textarea>
         <button>Gönder</button>
       </div>
-      <div class="idf-powered">Powered by idfine AI</div>
+      <div class="idf-powered">Powered by ID Fine AI</div>
     `;
     this.shadow.appendChild(this.container);
 

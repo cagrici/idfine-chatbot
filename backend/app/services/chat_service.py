@@ -26,14 +26,14 @@ settings = get_settings()
 # Pre-defined greeting responses per language (avoids LLM call entirely)
 _GREETING_RESPONSES = {
     "tr": [
-        "Merhaba! Ben idfine AI asistanıyım. Size ürünlerimiz, fiyatlarımız veya stok durumu hakkında yardımcı olabilirim. Nasıl yardımcı olabilirim?",
-        "Merhaba! idfine'a hoş geldiniz. Ürünler, fiyatlar veya sipariş hakkında sorularınızı yanıtlayabilirim. Size nasıl yardımcı olabilirim?",
-        "Hoş geldiniz! Ben idfine müşteri destek asistanıyım. Ürün bilgisi, fiyat veya stok sorgulaması için buradayım. Buyurun, nasıl yardımcı olabilirim?",
+        "Merhaba! Ben ID Fine AI asistanıyım. Size ürünlerimiz, fiyatlarımız veya stok durumu hakkında yardımcı olabilirim. Nasıl yardımcı olabilirim?",
+        "Merhaba! ID Fine'a hoş geldiniz. Ürünler, fiyatlar veya sipariş hakkında sorularınızı yanıtlayabilirim. Size nasıl yardımcı olabilirim?",
+        "Hoş geldiniz! Ben ID Fine müşteri destek asistanıyım. Ürün bilgisi, fiyat veya stok sorgulaması için buradayım. Buyurun, nasıl yardımcı olabilirim?",
     ],
     "en": [
-        "Hello! I'm the idfine AI assistant. I can help you with our products, prices, or stock availability. How can I assist you?",
-        "Welcome to idfine! I can answer your questions about our porcelain products, pricing, and orders. How can I help?",
-        "Hi there! I'm the idfine customer support assistant. I'm here for product info, pricing, or stock inquiries. What can I help you with?",
+        "Hello! I'm the ID Fine AI assistant. I can help you with our products, prices, or stock availability. How can I assist you?",
+        "Welcome to ID Fine! I can answer your questions about our porcelain products, pricing, and orders. How can I help?",
+        "Hi there! I'm the ID Fine customer support assistant. I'm here for product info, pricing, or stock inquiries. What can I help you with?",
     ],
 }
 _FAREWELL_RESPONSES = {
@@ -256,7 +256,7 @@ class ChatService:
         if intent == Intent.OUT_OF_SCOPE:
             response_text = (
                 "Uzgunum, bu konu hakkinda size yardimci olamam. "
-                "Ben sadece idfine urunleri ve hizmetleri hakkinda "
+                "Ben sadece ID Fine urunleri ve hizmetleri hakkinda "
                 "bilgi verebilirim."
             )
             return await self._save_and_return(conv, response_text, intent, [], None)
@@ -438,7 +438,7 @@ class ChatService:
         if intent == Intent.OUT_OF_SCOPE:
             text = (
                 "Uzgunum, bu konu hakkinda size yardimci olamam. "
-                "Ben sadece idfine urunleri ve hizmetleri hakkinda "
+                "Ben sadece ID Fine urunleri ve hizmetleri hakkinda "
                 "bilgi verebilirim."
             )
             yield {"type": "stream_start", "message_id": message_id}

@@ -21,7 +21,7 @@ class WidgetConfig(Base):
     )
     logo_variant: Mapped[str] = mapped_column(String(10), default="dark")
     brand_color: Mapped[str] = mapped_column(String(20), default="#231f20")
-    brand_name: Mapped[str] = mapped_column(String(100), default="idfine")
+    brand_name: Mapped[str] = mapped_column(String(100), default="ID Fine")
     welcome_message: Mapped[str] = mapped_column(
         Text, default="Merhaba! Size nasıl yardımcı olabilirim?"
     )

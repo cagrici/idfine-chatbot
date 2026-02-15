@@ -10,7 +10,7 @@ class WidgetConfigBase(BaseModel):
     source_group_id: uuid.UUID | None = None
     logo_variant: str = Field(default="dark", pattern="^(dark|light)$")
     brand_color: str = Field(default="#231f20", max_length=20)
-    brand_name: str = Field(default="idfine", max_length=100)
+    brand_name: str = Field(default="ID Fine", max_length=100)
     welcome_message: str = Field(
         default="Merhaba! Size nasıl yardımcı olabilirim?"
     )

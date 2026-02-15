@@ -8,7 +8,7 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-SYSTEM_PROMPT = """Sen idfine (Porser Porselen) firmasinin AI musteri destek asistanisin. idfine, Turkiye'de HORECA sektorunde porselen uretim ve satis yapan bir markadir.
+SYSTEM_PROMPT = """Sen ID Fine (Porser Porselen) firmasinin AI musteri destek asistanisin. ID Fine, Turkiye'de HORECA sektorunde porselen uretim ve satis yapan bir markadir.
 
 Markalar: ID Fine, 1972, Roots
 Materyaller: Fine China, Fine Stoneware, Stoneware

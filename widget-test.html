@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Fine Chat Widget Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { text-align: center; max-width: 600px; padding: 40px 20px; }
+        h1 { font-size: 28px; color: #231f20; margin-bottom: 12px; }
+        p { font-size: 16px; color: #666; margin-bottom: 8px; line-height: 1.6; }
+        #debug {
+            margin-top: 30px;
+            padding: 16px;
+            background: #1a1a1a;
+            color: #0f0;
+            border-radius: 8px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-width: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ID Fine Chat Widget Debug</h1>
+        <p>Sag alt kosedeki ikona tiklayarak sohbeti baslatin.</p>
+        <div id="debug">Loading...</div>
+    </div>
+
+    <script>
+        var _dbg = document.getElementById('debug');
+        function log(msg) {
+            _dbg.textContent += '\n' + msg;
+            console.log('[widget-debug]', msg);
+        }
+        // Override console.error to capture widget errors
+        var _origError = console.error;
+        console.error = function() {
+            var args = Array.from(arguments).join(' ');
+            log('ERROR: ' + args);
+            _origError.apply(console, arguments);
+        };
+        window.addEventListener('error', function(e) {
+            log('JS ERROR: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+        });
+        _dbg.textContent = 'readyState: ' + document.readyState;
+    </script>
+
+    <script src="https://chat.codsol.fi/widget/idfine-chat.js"
+      data-api-url="https://chat.codsol.fi"
+      data-source-group="7e9e38d6-8761-41aa-abf1-6f252bac6f38"
+    ></script>
+
+    <script>
+        log('IdfineChat defined: ' + (typeof window.IdfineChat));
+        log('IdfineChat keys: ' + (window.IdfineChat ? Object.keys(window.IdfineChat) : 'N/A'));
+        log('_instance: ' + (window.IdfineChat && window.IdfineChat._instance ? 'YES' : 'NO'));
+        var hostEl = document.getElementById('idfine-chat-widget');
+        log('Host element: ' + (hostEl ? 'FOUND' : 'NOT FOUND'));
+        if (hostEl) {
+            log('Host children: ' + hostEl.childNodes.length);
+            log('Host innerHTML length: ' + hostEl.innerHTML.length);
+        }
+        // Check shadow DOM trigger button
+        setTimeout(function() {
+            log('--- After 2s ---');
+            var host2 = document.getElementById('idfine-chat-widget');
+            log('Host element: ' + (host2 ? 'FOUND (display:' + getComputedStyle(host2).display + ')' : 'NOT FOUND'));
+            if (window.IdfineChat && window.IdfineChat._instance) {
+                log('Widget instance exists');
+            }
+            // List all fixed-position elements
+            var allEls = document.querySelectorAll('*');
+            var fixedCount = 0;
+            allEls.forEach(function(el) {
+                if (getComputedStyle(el).position === 'fixed') {
+                    fixedCount++;
+                    log('Fixed element: ' + el.tagName + '#' + el.id + '.' + el.className);
+                }
+            });
+            log('Total fixed elements: ' + fixedCount);
+        }, 2000);
+    </script>
+</body>
+</html>

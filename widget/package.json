@@ -1,7 +1,7 @@
 {
   "name": "@idfine/chat-widget",
   "version": "1.0.0",
-  "description": "idfine AI Chat Widget - Embeddable chat widget",
+  "description": "ID Fine AI Chat Widget - Embeddable chat widget",
   "main": "dist/idfine-chat.js",
   "scripts": {
     "build": "rollup -c",

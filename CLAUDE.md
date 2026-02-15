@@ -6,9 +6,9 @@
 *No recent activity*
 </claude-mem-context>
 
-# idfine AI Chatbot
+# ID Fine AI Chatbot
 
-HORECA sektöründe faaliyet gösteren Porser Porselen firmasının idfine markası için AI chatbot sistemi.
+HORECA sektöründe faaliyet gösteren Porser Porselen firmasının ID Fine markası için AI chatbot sistemi.
 
 ## Tech Stack
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy (async), Alembic

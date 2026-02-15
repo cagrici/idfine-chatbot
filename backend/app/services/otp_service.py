@@ -208,11 +208,11 @@ class OTPService:
     ) -> None:
         """Send OTP email using Odoo mail.mail model."""
         name = partner_name or "Degerli Musterimiz"
-        subject = "idfine - Dogrulama Kodunuz"
+        subject = "ID Fine - Dogrulama Kodunuz"
         body_html = f"""
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 20px;">
-                <h2 style="color: #231f20; margin: 0;">idfine</h2>
+                <h2 style="color: #231f20; margin: 0;">ID Fine</h2>
                 <p style="color: #666; margin: 5px 0;">Porser Porselen</p>
             </div>
             <div style="background: #f7f7f7; border-radius: 8px; padding: 24px; text-align: center;">

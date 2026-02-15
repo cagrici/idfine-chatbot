@@ -768,7 +768,7 @@
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-container">
-        <img src="/images/logo-dark.png" alt="idfine"
+        <img src="/images/logo-dark.png" alt="ID Fine"
             style="display:block;max-width:180px;height:auto;margin:0 auto 16px">
 
         <div class="form-group">
@@ -786,7 +786,7 @@
     <!-- Admin Panel -->
     <div id="adminPanel" class="app hidden">
         <div class="sidebar">
-            <div class="logo"><img src="/images/logo-light.png" alt="idfine Admin"
+            <div class="logo"><img src="/images/logo-light.png" alt="ID Fine Admin"
                     style="max-width:100%;height:32px;object-fit:contain"></div>
             <nav>
                 <a class="active" onclick="showPage('dashboard')" data-page="dashboard">Dashboard</a>
@@ -3971,7 +3971,7 @@
                             <span id="chatWsStatus" style="font-size:11px;padding:2px 8px;border-radius:4px;background:#fed7d7;color:#9b2c2c">Baglaniyor...</span>
                         </div>
                         <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px">
-                            <div class="msg-row"><img class="msg-avatar" src="/images/logo-dark-mobile.png" alt="AI"><div class="message assistant">Merhaba! Ben idfine AI asistaniyim. Size nasil yardimci olabilirim?</div></div>
+                            <div class="msg-row"><img class="msg-avatar" src="/images/logo-dark-mobile.png" alt="AI"><div class="message assistant">Merhaba! Ben ID Fine AI asistaniyim. Size nasil yardimci olabilirim?</div></div>
                         </div>
                         <div id="chatTypingDots" class="typing-dots" style="display:none"><div class="d"></div><div class="d"></div><div class="d"></div></div>
                         <div style="padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;gap:8px">
@@ -3982,7 +3982,7 @@
                     <div style="width:300px;background:white;border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow-y:auto">
                         <h4 style="margin-bottom:12px;color:#231f20">Ornek Sorular</h4>
                         <div style="display:flex;flex-direction:column;gap:6px">
-                            ${['Merhaba!', 'idfine hakkinda bilgi ver', 'Tabak cesitleriniz neler?', 'Bone china nedir?', 'HORECA icin hangi urunleri onerirsiniz?'].map(q =>
+                            ${['Merhaba!', 'ID Fine hakkinda bilgi ver', 'Tabak cesitleriniz neler?', 'Bone china nedir?', 'HORECA icin hangi urunleri onerirsiniz?'].map(q =>
                 `<button class="btn" style="background:#f0f2f5;text-align:left;font-size:12px" onclick="document.getElementById('chatInput').value='${q}';sendChatMsg()">${q}</button>`
             ).join('')}
                         </div>
@@ -4266,7 +4266,7 @@
                                 </div>
                                 <div>
                                     <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px">Marka Adı</label>
-                                    <input id="wBrandName" type="text" value="idfine"
+                                    <input id="wBrandName" type="text" value="ID Fine"
                                         style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px">
                                 </div>
                             </div>
@@ -4370,7 +4370,7 @@
                 source_group_id: document.getElementById('wSourceGroup').value || null,
                 logo_variant: document.querySelector('input[name="wLogo"]:checked').value,
                 brand_color: document.getElementById('wColor').value,
-                brand_name: document.getElementById('wBrandName').value.trim() || 'idfine',
+                brand_name: document.getElementById('wBrandName').value.trim() || 'ID Fine',
                 welcome_message: document.getElementById('wWelcome').value.trim(),
                 placeholder: document.getElementById('wPlaceholder').value.trim(),
                 position: document.getElementById('wPosition').value,
@@ -4448,7 +4448,7 @@
             let attrs = [`data-api-url="${apiUrl}"`];
             if (v.source_group_id) attrs.push(`data-source-group="${v.source_group_id}"`);
             if (v.brand_color !== '#231f20') attrs.push(`data-brand-color="${v.brand_color}"`);
-            if (v.brand_name !== 'idfine') attrs.push(`data-brand-name="${v.brand_name}"`);
+            if (v.brand_name !== 'ID Fine') attrs.push(`data-brand-name="${v.brand_name}"`);
             if (v.logo_variant !== 'dark') attrs.push(`data-logo-variant="${v.logo_variant}"`);
             if (v.position !== 'bottom-right') attrs.push(`data-position="${v.position}"`);
             if (v.width !== 380) attrs.push(`data-width="${v.width}"`);
@@ -4519,7 +4519,7 @@
             }
             document.getElementById('wColor').value = '#231f20';
             document.getElementById('wColorText').value = '#231f20';
-            document.getElementById('wBrandName').value = 'idfine';
+            document.getElementById('wBrandName').value = 'ID Fine';
             document.getElementById('wWelcome').value = 'Merhaba! Size nasıl yardımcı olabilirim?';
             document.getElementById('wPlaceholder').value = 'Mesajınızı yazın...';
             document.getElementById('wPosition').value = 'bottom-right';
@@ -4642,7 +4642,7 @@
             let attrs = [`data-api-url="${apiUrl}"`];
             if (config.source_group_id) attrs.push(`data-source-group="${config.source_group_id}"`);
             if (config.brand_color !== '#231f20') attrs.push(`data-brand-color="${config.brand_color}"`);
-            if (config.brand_name !== 'idfine') attrs.push(`data-brand-name="${config.brand_name}"`);
+            if (config.brand_name !== 'ID Fine') attrs.push(`data-brand-name="${config.brand_name}"`);
             if (config.logo_variant !== 'dark') attrs.push(`data-logo-variant="${config.logo_variant}"`);
             if (config.position !== 'bottom-right') attrs.push(`data-position="${config.position}"`);
             if (config.width !== 380) attrs.push(`data-width="${config.width}"`);

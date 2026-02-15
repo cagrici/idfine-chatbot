@@ -26,9 +26,16 @@ function init(config: WidgetConfig): ChatWidget {
   return widget;
 }
 
+// Find our script tag: try currentScript first, then fallback to DOM query
+const _currentScript =
+  (document.currentScript as HTMLScriptElement | null) ||
+  (document.querySelector("script[data-api-url]") as HTMLScriptElement | null);
+
 // Auto-init from script tag data attributes
 function autoInit() {
-  const script = document.currentScript as HTMLScriptElement | null;
+  const script =
+    _currentScript ||
+    (document.querySelector("script[data-api-url]") as HTMLScriptElement | null);
   if (!script) return;
 
   const apiUrl = script.getAttribute("data-api-url");
@@ -37,7 +44,7 @@ function autoInit() {
       apiUrl,
       sourceGroupId: script.getAttribute("data-source-group") || undefined,
       brandColor: script.getAttribute("data-brand-color") || "#231f20",
-      brandName: script.getAttribute("data-brand-name") || "idfine",
+      brandName: script.getAttribute("data-brand-name") || "ID Fine",
       position:
         (script.getAttribute("data-position") as WidgetConfig["position"]) ||
         "bottom-right",

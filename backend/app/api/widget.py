@@ -59,14 +59,14 @@ async def widget_init(
     # Multi-language support
     WIDGET_TEXTS = {
         "tr": {
-            "welcome_message": "Merhaba! Ben idfine AI asistanıyım. Size nasıl yardımcı olabilirim?",
+            "welcome_message": "Merhaba! Ben ID Fine AI asistanıyım. Size nasıl yardımcı olabilirim?",
             "placeholder": "Mesajınızı yazın...",
             "connecting": "Bağlanıyor...",
             "agent_joined": "Bir temsilci sohbete katıldı.",
             "rate_prompt": "Hizmetimizi değerlendirin",
         },
         "en": {
-            "welcome_message": "Hello! I'm idfine AI assistant. How can I help you?",
+            "welcome_message": "Hello! I'm ID Fine AI assistant. How can I help you?",
             "placeholder": "Type your message...",
             "connecting": "Connecting...",
             "agent_joined": "An agent has joined the chat.",
@@ -82,7 +82,7 @@ async def widget_init(
         "config": {
             "welcome_message": texts["welcome_message"],
             "placeholder": texts["placeholder"],
-            "brand_name": "idfine",
+            "brand_name": "ID Fine",
             "brand_color": "#231f20",
             "position": "bottom-right",
             "proactive_message": None,
@@ -97,9 +97,9 @@ async def widget_init(
 async def widget_config(settings: Annotated[Settings, Depends(get_settings)]):
     """Get widget configuration."""
     return {
-        "brand_name": "idfine",
+        "brand_name": "ID Fine",
         "brand_color": "#231f20",
-        "welcome_message": "Merhaba! Ben idfine AI asistanıyım. Size nasıl yardımcı olabilirim?",
+        "welcome_message": "Merhaba! Ben ID Fine AI asistanıyım. Size nasıl yardımcı olabilirim?",
         "placeholder": "Mesajınızı yazın...",
     }
 
