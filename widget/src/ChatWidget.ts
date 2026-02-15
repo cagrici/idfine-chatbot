@@ -340,12 +340,6 @@ export class ChatWidget {
             if (i >= fullText.length) {
               el.classList.remove("streaming");
               el.innerHTML = renderMarkdown(fullText);
-              if (data.sources?.length) {
-                const sourcesEl = document.createElement("div");
-                sourcesEl.className = "idf-sources";
-                sourcesEl.textContent = `Kaynaklar: ${data.sources.map((s: Source) => s.document).join(", ")}`;
-                el.appendChild(sourcesEl);
-              }
               clearInterval(interval);
               resolve();
             } else {
@@ -406,13 +400,6 @@ export class ChatWidget {
         el.innerHTML = renderMarkdown(msg.content);
       }
 
-      if (msg.sources?.length) {
-        const sourcesEl = document.createElement("div");
-        sourcesEl.className = "idf-sources";
-        sourcesEl.textContent = `Kaynaklar: ${msg.sources.map((s) => s.document).join(", ")}`;
-        el.appendChild(sourcesEl);
-      }
-
       row.appendChild(el);
       this.messagesEl.appendChild(row);
     } else if (msg.role === "user") {
@@ -470,12 +457,6 @@ export class ChatWidget {
       el.classList.remove("streaming");
       el.innerHTML = renderMarkdown(this.currentStreamContent);
 
-      if (sources?.length) {
-        const sourcesEl = document.createElement("div");
-        sourcesEl.className = "idf-sources";
-        sourcesEl.textContent = `Kaynaklar: ${sources.map((s) => s.document).join(", ")}`;
-        el.appendChild(sourcesEl);
-      }
     }
   }
 
