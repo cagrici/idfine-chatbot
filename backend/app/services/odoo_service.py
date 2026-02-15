@@ -201,6 +201,13 @@ class OdooService:
     async def add_ticket_message(self, ticket_id: int, partner_id: int, body: str) -> bool:
         return await self.adapter.add_ticket_message(ticket_id, partner_id, body)
 
+    # --- Email ---
+
+    async def send_email(
+        self, to: str, subject: str, body_html: str, email_from: str = ""
+    ) -> int:
+        return await self.adapter.send_email(to, subject, body_html, email_from)
+
     # --- Order cancellation ---
 
     async def request_order_cancellation(

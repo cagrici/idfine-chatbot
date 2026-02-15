@@ -22,6 +22,7 @@ class FlowType(StrEnum):
     ADDRESS_UPDATE = "address_update"
     TICKET_CREATE = "ticket_create"
     ORDER_CANCEL = "order_cancel"
+    COMPLAINT = "complaint"
 
 
 @dataclass

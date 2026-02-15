@@ -36,6 +36,7 @@ class Intent(StrEnum):
     SUPPORT_TICKET_LIST = "SUPPORT_TICKET_LIST"
     CATALOG_REQUEST = "CATALOG_REQUEST"
     SPENDING_REPORT = "SPENDING_REPORT"
+    COMPLAINT = "COMPLAINT"
     CUSTOMER_AUTH = "CUSTOMER_AUTH"
     CUSTOMER_LOGOUT = "CUSTOMER_LOGOUT"
 
@@ -170,8 +171,13 @@ _PROFILE_UPDATE_KEYWORDS = re.compile(
     re.IGNORECASE,
 )
 _SUPPORT_KEYWORDS = re.compile(
-    r"\b(destek\s*talebi|sorun\s*bildir|[sş]ikayet|ticket|destek|talep\s*olu[sş]tur"
+    r"\b(destek\s*talebi|sorun\s*bildir|ticket|destek|talep\s*olu[sş]tur"
     r"|support\s*ticket|create\s*ticket|report\s*issue)\b",
+    re.IGNORECASE,
+)
+_COMPLAINT_KEYWORDS = re.compile(
+    r"\b([sş]ikayet|[sş]ikayetim|memnun\s*de[gğ]il|complaint"
+    r"|[sş]ikayet\s*(etmek|iletmek|bildirmek)|sorun\s*ya[sş][iı]yorum)\b",
     re.IGNORECASE,
 )
 _SUPPORT_LIST_KEYWORDS = re.compile(
@@ -267,6 +273,10 @@ class IntentClassifier:
             return Intent.PROFILE_UPDATE
         if _PROFILE_KEYWORDS.search(text):
             return Intent.PROFILE_VIEW
+
+        # Complaint (before support - no auth required)
+        if _COMPLAINT_KEYWORDS.search(text):
+            return Intent.COMPLAINT
 
         # Support
         if _SUPPORT_LIST_KEYWORDS.search(text):

@@ -201,7 +201,7 @@ class ProductDBService:
             if p.get('image_url'):
                 img = p['image_url']
                 if img.startswith('/'):
-                    img = f"https://chat.codsol.fi{img}"
+                    img = f"https://idfine.codsol.fi{img}"
                 parts.append(f"  Resim: {img}")
             lines.append("\n".join(parts))
 

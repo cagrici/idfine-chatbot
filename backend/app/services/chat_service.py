@@ -215,6 +215,12 @@ class ChatService:
             text = self._build_catalog_response(user_message)
             return await self._save_and_return(conv, text, intent, [], None)
 
+        # Complaint flow (no auth required)
+        if intent == Intent.COMPLAINT:
+            flow_msg = await self._maybe_start_flow(intent, conv_id_str, visitor_id)
+            if flow_msg:
+                return await self._save_and_return(conv, flow_msg, intent, [], None)
+
         # Customer auth gate
         if intent.requires_customer_auth:
             # Check if source group allows Odoo access
@@ -383,6 +389,16 @@ class ChatService:
             await self._save_assistant_message(conv.id, text, intent, [], None)
             return
 
+        # --- Step 4.6: Complaint flow (no auth required) ---
+        if intent == Intent.COMPLAINT:
+            flow_msg = await self._maybe_start_flow(intent, conv_id_str, visitor_id)
+            if flow_msg:
+                yield {"type": "stream_start", "message_id": message_id}
+                yield {"type": "stream_chunk", "content": flow_msg, "message_id": message_id}
+                yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": intent.value}
+                await self._save_assistant_message(conv.id, flow_msg, intent, [], None)
+                return
+
         # --- Step 5: Customer auth gate for restricted intents ---
         if intent.requires_customer_auth:
             # Check if source group allows Odoo access
@@ -530,6 +546,7 @@ class ChatService:
         Intent.ORDER_CREATE: FlowType.ORDER_CREATE,
         Intent.ORDER_CANCEL: FlowType.ORDER_CANCEL,
         Intent.SUPPORT_TICKET_CREATE: FlowType.TICKET_CREATE,
+        Intent.COMPLAINT: FlowType.COMPLAINT,
         Intent.PROFILE_UPDATE: FlowType.ADDRESS_UPDATE,
         Intent.ADDRESS_UPDATE: FlowType.ADDRESS_UPDATE,
         Intent.QUOTE_REQUEST: FlowType.QUOTATION_CREATE,
@@ -570,6 +587,10 @@ class ChatService:
             FlowType.QUOTATION_CREATE: (
                 "Fiyat teklifi talebi olusturmak icin yardimci olacagim.\n"
                 "Lutfen teklif almak istediginiz urunleri, miktarlari ve ozel isteklerinizi detayli olarak yazin."
+            ),
+            FlowType.COMPLAINT: (
+                "Sikayetinizi almak icin size yardimci olacagim.\n"
+                "Lutfen adinizi ve soyadinizi yaziniz."
             ),
         }
 
