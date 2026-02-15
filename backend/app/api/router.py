@@ -14,6 +14,7 @@ from app.api.source_groups import router as source_groups_router
 from app.api.websocket import router as ws_router
 from app.api.widget import router as widget_router
 from app.api.widget_configs import router as widget_configs_router
+from app.api.social_media import router as social_media_router
 from app.meta.webhooks import router as meta_webhook_router
 from app.odoo.webhooks import router as webhook_router
 
@@ -32,6 +33,7 @@ api_router.include_router(customer_router)
 api_router.include_router(live_support_router)
 api_router.include_router(canned_responses_router)
 api_router.include_router(reports_router)
+api_router.include_router(social_media_router)
 api_router.include_router(meta_webhook_router)
 
 # WebSocket routes are at root level (no /api prefix)
