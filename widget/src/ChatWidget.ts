@@ -12,6 +12,7 @@ export class ChatWidget {
   private visitorId = "";
   private conversationId = "";
   private isOpen = false;
+  private isFullscreen = false;
   private isStreaming = false;
   private currentStreamId = "";
   private currentStreamContent = "";
@@ -94,9 +95,15 @@ export class ChatWidget {
             <div class="idf-status">Çevrimiçi</div>
           </div>
         </div>
-        <button class="idf-widget-close" aria-label="Kapat">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
+        <div class="idf-header-actions">
+          <button class="idf-widget-fullscreen" aria-label="Tam ekran">
+            <svg class="idf-fs-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+            <svg class="idf-fs-shrink" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M4 14h6v6m10-10h-6V4m0 6l7-7M3 21l7-7"/></svg>
+          </button>
+          <button class="idf-widget-close" aria-label="Kapat">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
       </div>
       <div class="idf-messages"></div>
       <div class="idf-input-area">
@@ -114,6 +121,10 @@ export class ChatWidget {
 
   private bindEvents() {
     this.triggerBtn.addEventListener("click", () => this.toggle());
+
+    this.container
+      .querySelector(".idf-widget-fullscreen")!
+      .addEventListener("click", () => this.toggleFullscreen());
 
     this.container
       .querySelector(".idf-widget-close")!
@@ -504,10 +515,30 @@ export class ChatWidget {
     });
   }
 
+  private toggleFullscreen() {
+    this.isFullscreen = !this.isFullscreen;
+    this.container.classList.toggle("fullscreen", this.isFullscreen);
+
+    const expandIcon = this.container.querySelector(".idf-fs-expand") as HTMLElement;
+    const shrinkIcon = this.container.querySelector(".idf-fs-shrink") as HTMLElement;
+    if (expandIcon && shrinkIcon) {
+      expandIcon.style.display = this.isFullscreen ? "none" : "block";
+      shrinkIcon.style.display = this.isFullscreen ? "block" : "none";
+    }
+
+    this.scrollToBottom();
+  }
+
   private toggle() {
     this.isOpen = !this.isOpen;
     this.container.classList.toggle("open", this.isOpen);
     this.triggerBtn.classList.toggle("open", this.isOpen);
+
+    // Exit fullscreen when closing
+    if (!this.isOpen && this.isFullscreen) {
+      this.toggleFullscreen();
+    }
+
     if (this.isOpen) {
       this.textarea.focus();
       this.scrollToBottom();

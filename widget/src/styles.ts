@@ -136,6 +136,13 @@ export function getStyles(config: WidgetConfig): string {
       opacity: 0.8;
     }
 
+    .idf-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .idf-widget-fullscreen,
     .idf-widget-close {
       background: none;
       border: none;
@@ -148,6 +155,7 @@ export function getStyles(config: WidgetConfig): string {
       justify-content: center;
     }
 
+    .idf-widget-fullscreen:hover,
     .idf-widget-close:hover { background: rgba(255,255,255,0.15); }
 
     /* ── Messages Area ── */
@@ -363,6 +371,28 @@ export function getStyles(config: WidgetConfig): string {
       flex-shrink: 0;
     }
 
+    /* ── Fullscreen Mode ── */
+    .idf-widget-container.fullscreen {
+      bottom: 0 !important;
+      right: 0 !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100vh !important;
+      border-radius: 0 !important;
+      transition: all 0.3s ease;
+    }
+
+    .idf-widget-fullscreen .idf-fs-expand { display: block; }
+    .idf-widget-fullscreen .idf-fs-shrink { display: none; }
+
+    .idf-widget-container.fullscreen ~ .idf-widget-trigger .idf-widget-fullscreen .idf-fs-expand,
+    .fullscreen .idf-widget-fullscreen .idf-fs-expand { display: none; }
+
+    .idf-widget-container.fullscreen ~ .idf-widget-trigger .idf-widget-fullscreen .idf-fs-shrink,
+    .fullscreen .idf-widget-fullscreen .idf-fs-shrink { display: block; }
+
     /* ── Mobile Responsive ── */
     @media (max-width: 480px) {
       .idf-widget-container {
@@ -374,6 +404,8 @@ export function getStyles(config: WidgetConfig): string {
         max-height: 100vh;
         border-radius: 0;
       }
+
+      .idf-widget-fullscreen { display: none !important; }
 
       .idf-widget-trigger {
         bottom: 16px;
