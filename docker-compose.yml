@@ -71,6 +71,7 @@ services:
       - ./test-admin.html:/usr/share/nginx/pages/test-admin.html:ro
       - ./test-chat.html:/usr/share/nginx/pages/test-chat.html:ro
       - ./widget-test.html:/usr/share/nginx/pages/widget-test.html:ro
+      - ./widget-demo.html:/usr/share/nginx/pages/widget-demo.html:ro
       - ./images:/usr/share/nginx/images:ro
     depends_on:
       - backend

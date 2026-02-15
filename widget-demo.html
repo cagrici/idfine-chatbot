@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Fine — Premium HORECA Porselen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #231f20;
+            --cream: #f6f2ed;
+            --warm: #c9a96e;
+            --warm-soft: rgba(201, 169, 110, 0.12);
+            --stone: #8a8078;
+            --porcelain: #faf9f7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--porcelain);
+            color: var(--ink);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Grain overlay --- */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px;
+            z-index: 9999;
+        }
+
+        /* --- Nav --- */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 24px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.4s, backdrop-filter 0.4s;
+        }
+
+        nav.scrolled {
+            background: rgba(246, 242, 237, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .nav-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            color: var(--ink);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--stone);
+            text-decoration: none;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--warm);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--ink); }
+        .nav-links a:hover::after { width: 100%; }
+
+        /* --- Hero --- */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 32px 80px;
+            position: relative;
+        }
+
+        .hero-ornament {
+            width: 1px;
+            height: 80px;
+            background: linear-gradient(to bottom, transparent, var(--warm), transparent);
+            margin-bottom: 40px;
+            animation: fadeSlideDown 1.2s ease-out both;
+        }
+
+        .hero-tagline {
+            font-family: 'Outfit', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--warm);
+            margin-bottom: 28px;
+            animation: fadeSlideUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(48px, 8vw, 110px);
+            font-weight: 300;
+            line-height: 1.05;
+            letter-spacing: -0.01em;
+            color: var(--ink);
+            margin-bottom: 32px;
+            animation: fadeSlideUp 0.8s ease-out 0.4s both;
+        }
+
+        .hero h1 em {
+            font-style: italic;
+            font-weight: 300;
+            color: var(--stone);
+        }
+
+        .hero-desc {
+            font-size: 16px;
+            font-weight: 300;
+            line-height: 1.8;
+            color: var(--stone);
+            max-width: 520px;
+            margin-bottom: 48px;
+            animation: fadeSlideUp 0.8s ease-out 0.6s both;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink);
+            text-decoration: none;
+            padding: 14px 36px;
+            border: 1px solid rgba(35, 31, 32, 0.2);
+            border-radius: 0;
+            transition: all 0.4s;
+            animation: fadeSlideUp 0.8s ease-out 0.8s both;
+        }
+
+        .hero-cta:hover {
+            background: var(--ink);
+            color: var(--porcelain);
+            border-color: var(--ink);
+        }
+
+        .hero-cta svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s;
+        }
+
+        .hero-cta:hover svg { transform: translateX(4px); }
+
+        .hero-scroll {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--stone);
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            animation: fadeIn 1s ease-out 1.2s both;
+        }
+
+        .hero-scroll .line {
+            width: 1px;
+            height: 32px;
+            background: var(--stone);
+            animation: scrollPulse 2s ease-in-out infinite;
+        }
+
+        /* --- Features --- */
+        .features {
+            padding: 120px 48px;
+            background: var(--ink);
+            color: var(--cream);
+            position: relative;
+        }
+
+        .features::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, var(--warm), transparent);
+        }
+
+        .features-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 64px;
+        }
+
+        .feature {
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+
+        .feature.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(201, 169, 110, 0.3);
+            border-radius: 50%;
+        }
+
+        .feature-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--warm);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .feature h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 12px;
+            color: var(--cream);
+        }
+
+        .feature p {
+            font-size: 14px;
+            font-weight: 300;
+            line-height: 1.7;
+            color: rgba(246, 242, 237, 0.6);
+        }
+
+        /* --- Chat CTA section --- */
+        .chat-section {
+            padding: 120px 32px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-section-label {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--warm);
+            margin-bottom: 24px;
+        }
+
+        .chat-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 300;
+            line-height: 1.15;
+            color: var(--ink);
+            margin-bottom: 20px;
+        }
+
+        .chat-section p {
+            font-size: 15px;
+            font-weight: 300;
+            line-height: 1.8;
+            color: var(--stone);
+            max-width: 480px;
+            margin: 0 auto 40px;
+        }
+
+        .chat-pointer {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--warm);
+            letter-spacing: 0.04em;
+            animation: gentleBounce 2.5s ease-in-out infinite;
+        }
+
+        .chat-pointer svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* --- Footer --- */
+        footer {
+            padding: 40px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(35, 31, 32, 0.08);
+        }
+
+        footer span {
+            font-size: 12px;
+            color: var(--stone);
+            letter-spacing: 0.02em;
+        }
+
+        footer .footer-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            color: var(--ink);
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeSlideDown {
+            from { opacity: 0; transform: translateY(-24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scrollPulse {
+            0%, 100% { opacity: 0.4; transform: scaleY(1); }
+            50% { opacity: 1; transform: scaleY(1.3); }
+        }
+
+        @keyframes gentleBounce {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-4px) translateX(4px); }
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            nav { padding: 20px 24px; }
+            .nav-links { display: none; }
+            .hero { padding: 100px 24px 80px; }
+            .hero-ornament { height: 50px; margin-bottom: 28px; }
+            .hero-desc { font-size: 15px; }
+            .features { padding: 80px 24px; }
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 48px;
+                max-width: 400px;
+            }
+            .chat-section { padding: 80px 24px; }
+            footer { padding: 32px 24px; flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav id="nav">
+        <a href="/" class="nav-logo">ID FINE</a>
+        <ul class="nav-links">
+            <li><a href="#koleksiyonlar">Koleksiyonlar</a></li>
+            <li><a href="#hakkimizda">Hakkimizda</a></li>
+            <li><a href="#iletisim">Iletisim</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-ornament"></div>
+        <p class="hero-tagline">Premium HORECA Porselen</p>
+        <h1>ID <em>Fine</em></h1>
+        <p class="hero-desc">
+            HORECA sektorunun onde gelen porselen markasi.
+            Zarafet, dayaniklilik ve estetigi bir arada sunan
+            koleksiyonlarimizla misafirlerinizi etkileyin.
+        </p>
+        <a href="#iletisim" class="hero-cta">
+            Koleksiyonlari Kesfedin
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+        </a>
+        <div class="hero-scroll">
+            <div class="line"></div>
+        </div>
+    </section>
+
+    <section class="features" id="koleksiyonlar">
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                </div>
+                <h3>Genis Koleksiyon</h3>
+                <p>Bone china, porselen ve seramik urunlerimizle her konsepte uygun cozumler sunuyoruz.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <h3>Hizli Teslimat</h3>
+                <p>Genis stok agimiz sayesinde siparisleriniz en kisa surede teslim edilir.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg>
+                </div>
+                <h3>Ozel Tasarim</h3>
+                <p>Markaniza ozel logo baski ve ozel tasarim hizmetleriyle farkinizi ortaya koyun.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="chat-section" id="iletisim">
+        <p class="chat-section-label">AI Asistan</p>
+        <h2>Size Nasil<br>Yardimci Olabiliriz?</h2>
+        <p>
+            Urunler, fiyatlar, stok durumu veya siparisleriniz hakkinda
+            sorularinizi AI asistanimiza sorabilirsiniz.
+        </p>
+        <div class="chat-pointer">
+            Sohbeti baslatmak icin tiklayin
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M7 17L17 7M17 7H7M17 7v10"/>
+            </svg>
+        </div>
+    </section>
+
+    <footer>
+        <span class="footer-logo">ID FINE</span>
+        <span>&copy; 2026 Porser Porselen. Tum haklari saklidir.</span>
+    </footer>
+
+    <script>
+        // Nav scroll effect
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 60);
+        });
+
+        // Feature reveal on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => entry.target.classList.add('visible'), i * 150);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        document.querySelectorAll('.feature').forEach(el => observer.observe(el));
+    </script>
+
+    <script src="https://idfine.codsol.fi/widget/idfine-chat.js"
+      data-api-url="https://idfine.codsol.fi"
+      data-source-group="7e9e38d6-8761-41aa-abf1-6f252bac6f38"
+    ></script>
+</body>
+</html>
