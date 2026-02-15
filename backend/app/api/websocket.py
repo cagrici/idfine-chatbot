@@ -173,6 +173,13 @@ async def widget_websocket(websocket: WebSocket, session_id: str):
                         "message_id": str(user_msg.id),
                         "attachments": attachments,
                     })
+
+                    # Acknowledge to widget so it resets typing indicator & input
+                    await websocket.send_json({
+                        "type": "human_ack",
+                        "message_id": str(user_msg.id),
+                        "conversation_id": conversation_id,
+                    })
                 else:
                     # Normal AI flow
                     chat = ChatService(

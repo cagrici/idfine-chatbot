@@ -65,4 +65,10 @@ export interface WSSystem {
   event?: "escalated" | "agent_joined" | "agent_left";
 }
 
-export type WSIncoming = WSStreamStart | WSStreamChunk | WSStreamEnd | WSError | WSSystem;
+export interface WSHumanAck {
+  type: "human_ack";
+  message_id: string;
+  conversation_id: string;
+}
+
+export type WSIncoming = WSStreamStart | WSStreamChunk | WSStreamEnd | WSError | WSSystem | WSHumanAck;

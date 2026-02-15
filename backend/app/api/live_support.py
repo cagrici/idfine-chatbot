@@ -125,6 +125,51 @@ async def get_active_conversations(
     return {"conversations": response, "total": len(response)}
 
 
+@router.get("/{conversation_id}/messages")
+async def get_conversation_messages(
+    conversation_id: str,
+    user: Annotated[User, Depends(require_respond)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Get conversation messages without claiming (read-only view)."""
+    result = await db.execute(
+        select(Conversation).where(Conversation.id == uuid.UUID(conversation_id))
+    )
+    conv = result.scalar_one_or_none()
+    if not conv:
+        raise NotFoundError("Sohbet bulunamadı")
+
+    msg_result = await db.execute(
+        select(Message)
+        .where(Message.conversation_id == conv.id)
+        .order_by(Message.created_at.asc())
+    )
+    messages = msg_result.scalars().all()
+
+    return {
+        "conversation_id": conversation_id,
+        "status": conv.status,
+        "mode": conv.mode or "ai",
+        "assigned_agent_id": str(conv.assigned_agent_id) if conv.assigned_agent_id else None,
+        "visitor_id": conv.visitor_id,
+        "channel": conv.channel or "widget",
+        "tags": conv.tags or [],
+        "messages": [
+            {
+                "id": str(m.id),
+                "role": m.role,
+                "content": m.content,
+                "sender_type": m.sender_type or "ai",
+                "agent_id": str(m.agent_id) if m.agent_id else None,
+                "attachments": m.attachments,
+                "feedback": m.feedback,
+                "created_at": m.created_at.isoformat(),
+            }
+            for m in messages
+        ],
+    }
+
+
 @router.post("/claim/{conversation_id}")
 async def claim_conversation(
     conversation_id: str,

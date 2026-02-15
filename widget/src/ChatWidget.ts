@@ -259,6 +259,14 @@ export class ChatWidget {
         this.textarea.focus();
         break;
 
+      case "human_ack":
+        // Agent received the message — reset UI without creating a bubble
+        this.removeTypingIndicator();
+        this.isStreaming = false;
+        this.sendBtn.disabled = false;
+        this.textarea.disabled = false;
+        break;
+
       case "error":
         this.removeTypingIndicator();
         this.isStreaming = false;

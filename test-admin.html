@@ -3295,6 +3295,7 @@
                     lsActiveConvId = null;
                     document.getElementById('lsChatHeader').style.display = 'none';
                     document.getElementById('lsChatInput').style.display = 'none';
+                    const joinBar = document.getElementById('lsJoinBar'); if (joinBar) joinBar.remove();
                     document.getElementById('lsChatMessages').innerHTML = '<div class="ls-empty">Sohbet kapatildi.</div>';
                     await lsLoadData();
                 } else {
@@ -3316,6 +3317,7 @@
                     lsActiveConvId = null;
                     document.getElementById('lsChatHeader').style.display = 'none';
                     document.getElementById('lsChatInput').style.display = 'none';
+                    const joinBar = document.getElementById('lsJoinBar'); if (joinBar) joinBar.remove();
                     document.getElementById('lsChatMessages').innerHTML = '<div class="ls-empty">Sohbet birakildi. AI tekrar aktif.</div>';
                     await lsLoadData();
                 } else {
@@ -3333,8 +3335,7 @@
             // Update UI
             document.getElementById('lsChatHeader').style.display = 'flex';
             document.getElementById('lsChatTitle').textContent = 'Sohbet: ' + (visitorLabel || convId.substring(0,8));
-            document.getElementById('lsChatInput').style.display = 'flex';
-            document.getElementById('lsChatMessages').innerHTML = '<div class="ls-empty">Baglaniliyor...</div>';
+            document.getElementById('lsChatMessages').innerHTML = '<div class="ls-empty">Yukleniyor...</div>';
 
             // Load customer profile (Feature 13)
             lsLoadProfile(convId);
@@ -3342,26 +3343,83 @@
             // Highlight active item
             document.querySelectorAll('.ls-item').forEach(i => i.classList.remove('active'));
 
-            // Auto-claim if not already assigned to this agent
+            // Check if already assigned to this agent
             const conv = lsAllConversations.find(c => c.conversation_id === convId);
-            if (conv && conv.status !== 'assigned') {
+            const isAssigned = conv && conv.status === 'assigned';
+
+            if (isAssigned) {
+                // Already claimed → connect WS directly and show input
+                document.getElementById('lsChatInput').style.display = 'flex';
+                lsConnectAgentWs(convId);
+            } else {
+                // Not claimed → load messages via REST (read-only), show join button
+                document.getElementById('lsChatInput').style.display = 'none';
                 try {
-                    const claimResp = await fetch(`${API}/api/live-support/claim/${convId}`, {
-                        method: 'POST', headers: authHeaders()
-                    });
-                    if (!claimResp.ok) {
-                        const err = await claimResp.json().catch(() => ({}));
-                        document.getElementById('lsChatMessages').innerHTML = '<div class="ls-empty" style="color:#e53e3e">' + escHtml(err.detail || 'Devralma hatasi') + '</div>';
+                    const resp = await fetch(`${API}/api/live-support/${convId}/messages`, { headers: authHeaders() });
+                    if (!resp.ok) {
+                        document.getElementById('lsChatMessages').innerHTML = '<div class="ls-empty" style="color:#e53e3e">Mesajlar yuklenemedi</div>';
                         return;
                     }
-                    await lsLoadData();
+                    const data = await resp.json();
+                    // Render messages read-only (same format as history)
+                    const msgsEl = document.getElementById('lsChatMessages');
+                    msgsEl.innerHTML = data.messages.map(m => {
+                        const attachHtml = lsRenderAttachmentHtml(m.attachments);
+                        if (m.sender_type === 'note') {
+                            return `<div style="margin:6px 12px;padding:8px 12px;background:#fefce8;border-left:3px solid #f59e0b;border-radius:4px;font-size:12px"><div style="font-size:10px;color:#92400e;margin-bottom:2px">&#x1F4DD; Dahili Not</div><div style="color:#78350f">${escHtml(m.content)}</div></div>`;
+                        }
+                        if (m.sender_type === 'system') {
+                            return `<div class="ls-system-msg">${escHtml(m.content)}</div>`;
+                        }
+                        if (m.role === 'assistant') {
+                            const label = m.sender_type === 'human' ? 'Temsilci' : 'AI';
+                            return `<div class="msg-row"><img class="msg-avatar" src="/images/logo-dark-mobile.png" alt="${label}"><div class="message assistant"><div style="font-size:10px;color:#a0aec0;margin-bottom:2px">${label}</div>${renderMarkdown(m.content)}${attachHtml}</div></div>`;
+                        }
+                        return `<div class="msg-row user"><div class="message user">${escHtml(m.content || '')}${attachHtml}</div></div>`;
+                    }).join('') || '<div style="text-align:center;color:#a0aec0;padding:20px">Mesaj yok</div>';
+                    lsCurrentTags = data.tags || [];
+                    lsRenderTags();
+                    msgsEl.scrollTop = msgsEl.scrollHeight;
+
+                    // Show "Join Chat" button
+                    const joinBtn = document.createElement('div');
+                    joinBtn.id = 'lsJoinBar';
+                    joinBtn.style.cssText = 'padding:12px;text-align:center;border-top:1px solid #e2e8f0;background:#f8fafc';
+                    joinBtn.innerHTML = '<button class="btn btn-primary" onclick="lsJoinConversation()" style="padding:8px 24px;font-size:14px">&#x1F4AC; Sohbete Katil</button>';
+                    // Insert after messages area (before canned panel)
+                    const existingJoinBar = document.getElementById('lsJoinBar');
+                    if (existingJoinBar) existingJoinBar.remove();
+                    msgsEl.parentNode.insertBefore(joinBtn, msgsEl.nextSibling);
                 } catch (e) {
                     document.getElementById('lsChatMessages').innerHTML = '<div class="ls-empty" style="color:#e53e3e">Baglanti hatasi</div>';
-                    return;
                 }
             }
+        }
 
-            // Connect agent WS
+        async function lsJoinConversation() {
+            if (!lsActiveConvId) return;
+            const joinBar = document.getElementById('lsJoinBar');
+            if (joinBar) joinBar.innerHTML = '<span style="color:#a0aec0;font-size:13px">Katiliniyor...</span>';
+            try {
+                const claimResp = await fetch(`${API}/api/live-support/claim/${lsActiveConvId}`, {
+                    method: 'POST', headers: authHeaders()
+                });
+                if (!claimResp.ok) {
+                    const err = await claimResp.json().catch(() => ({}));
+                    if (joinBar) joinBar.innerHTML = '<span style="color:#e53e3e;font-size:13px">' + escHtml(err.detail || 'Devralma hatasi') + '</span>';
+                    return;
+                }
+                // Remove join bar, show input, connect WS
+                if (joinBar) joinBar.remove();
+                document.getElementById('lsChatInput').style.display = 'flex';
+                lsConnectAgentWs(lsActiveConvId);
+                await lsLoadData();
+            } catch (e) {
+                if (joinBar) joinBar.innerHTML = '<span style="color:#e53e3e;font-size:13px">Baglanti hatasi</span>';
+            }
+        }
+
+        function lsConnectAgentWs(convId) {
             lsAgentWs = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/live-support/${convId}?token=${token}`);
 
             lsAgentWs.onopen = () => {
