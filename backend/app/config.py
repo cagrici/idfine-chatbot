@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     odoo_sync_interval_minutes: int = 30
     odoo_sync_batch_size: int = 200
     odoo_sync_full_interval_hours: int = 24
+    odoo_sync_pricelist_id: int = 0  # Odoo pricelist ID for prices (0 = use list_price)
 
     # Security
     jwt_secret: str = ""

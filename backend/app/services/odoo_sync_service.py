@@ -60,8 +60,11 @@ class OdooSyncService:
                 await self._finish_log(log, 0)
                 return
 
-            stock_map = await self._fetch_stock([p["id"] for p in products])
-            count = await self._upsert_products(products, stock_map)
+            product_ids = [p["id"] for p in products]
+            tmpl_ids = list({p["product_tmpl_id"][0] for p in products if isinstance(p.get("product_tmpl_id"), list)})
+            stock_map = await self._fetch_stock(product_ids)
+            price_map = await self._fetch_pricelist_prices(tmpl_ids)
+            count = await self._upsert_products(products, stock_map, price_map)
             await self._invalidate_cache()
             await self._finish_log(log, count)
             logger.info("Delta sync: upserted %d products", count)
@@ -95,8 +98,10 @@ class OdooSyncService:
 
                 ids = [p["id"] for p in products]
                 all_odoo_ids.update(ids)
+                tmpl_ids = list({p["product_tmpl_id"][0] for p in products if isinstance(p.get("product_tmpl_id"), list)})
                 stock_map = await self._fetch_stock(ids)
-                total_upserted += await self._upsert_products(products, stock_map)
+                price_map = await self._fetch_pricelist_prices(tmpl_ids)
+                total_upserted += await self._upsert_products(products, stock_map, price_map)
                 offset += batch_size
 
                 if len(products) < batch_size:
@@ -126,7 +131,7 @@ class OdooSyncService:
         """Fetch products from Odoo via JSON-RPC."""
         fields = [
             "id", "name", "default_code", "list_price",
-            "active", "write_date", "categ_id",
+            "active", "write_date", "categ_id", "product_tmpl_id",
         ]
         kwargs: dict = {"fields": fields, "order": "id asc"}
         if limit:
@@ -137,6 +142,28 @@ class OdooSyncService:
         return await self.adapter.call(
             "product.product", "search_read", [domain], kwargs
         )
+
+    async def _fetch_pricelist_prices(self, product_tmpl_ids: list[int]) -> dict[int, float]:
+        """Fetch fixed prices from the configured pricelist, keyed by product_tmpl_id."""
+        pricelist_id = settings.odoo_sync_pricelist_id
+        if not pricelist_id:
+            return {}
+
+        records = await self.adapter.call(
+            "product.pricelist.item",
+            "search_read",
+            [[
+                ["pricelist_id", "=", pricelist_id],
+                ["product_tmpl_id", "in", product_tmpl_ids],
+            ]],
+            {"fields": ["product_tmpl_id", "fixed_price"]},
+        )
+
+        price_map: dict[int, float] = {}
+        for r in records:
+            tmpl_id = r["product_tmpl_id"][0] if isinstance(r["product_tmpl_id"], list) else r["product_tmpl_id"]
+            price_map[tmpl_id] = r.get("fixed_price") or 0
+        return price_map
 
     async def _fetch_stock(self, product_ids: list[int]) -> dict[int, float]:
         """Fetch aggregated stock for a list of product IDs."""
@@ -161,11 +188,15 @@ class OdooSyncService:
     # ------------------------------------------------------------------
 
     async def _upsert_products(
-        self, odoo_products: list[dict], stock_map: dict[int, float]
+        self,
+        odoo_products: list[dict],
+        stock_map: dict[int, float],
+        price_map: dict[int, float] | None = None,
     ) -> int:
         """Upsert Odoo products into local DB. Returns count of affected rows."""
         now = datetime.now(timezone.utc)
         count = 0
+        price_map = price_map or {}
 
         # Deduplicate by default_code — keep last variant per code
         # and aggregate stock across all variants with the same code
@@ -186,12 +217,18 @@ class OdooSyncService:
                 # Clamp to int32 range; treat extreme negatives as 0
                 stock_qty = max(0, min(int(raw_stock), 2_147_483_647))
 
+                # Resolve price: pricelist > list_price
+                tmpl_id = rec["product_tmpl_id"][0] if isinstance(rec.get("product_tmpl_id"), list) else None
+                price = price_map.get(tmpl_id, 0) if tmpl_id else 0
+                if not price:
+                    price = rec.get("list_price") or 0
+
                 # Try to find existing product by odoo_product_id first, then by urun_kodu
                 product = await self._find_product(db, odoo_id, default_code)
 
                 if product:
                     # Update price, stock, active, sync metadata
-                    product.fiyat = rec.get("list_price") or 0
+                    product.fiyat = price
                     product.stok = stock_qty
                     product.aktif = bool(rec.get("active", True))
                     product.odoo_product_id = odoo_id
@@ -202,7 +239,7 @@ class OdooSyncService:
                     product = Product(
                         urun_kodu=default_code,
                         urun_tanimi=rec.get("name"),
-                        fiyat=rec.get("list_price") or 0,
+                        fiyat=price,
                         stok=stock_qty,
                         aktif=bool(rec.get("active", True)),
                         odoo_product_id=odoo_id,
