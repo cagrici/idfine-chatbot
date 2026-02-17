@@ -86,7 +86,7 @@ class OTPService:
             partners = await odoo_adapter.call(
                 "res.partner",
                 "search_read",
-                [[["email", "=ilike", email], ["customer_rank", ">", 0]]],
+                [[["email", "=ilike", email]]],
                 {"fields": ["id", "name", "email"], "limit": 1},
             )
             if partners:
