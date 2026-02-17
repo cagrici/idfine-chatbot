@@ -149,15 +149,22 @@ class OdooSyncService:
         now = datetime.now(timezone.utc)
         count = 0
 
-        async with async_session() as db:
-            for rec in odoo_products:
-                odoo_id = rec["id"]
-                default_code = (rec.get("default_code") or "").strip()
-                if not default_code:
-                    # Products without a code can't be matched — skip
-                    continue
+        # Deduplicate by default_code — keep last variant per code
+        # and aggregate stock across all variants with the same code
+        code_map: dict[str, dict] = {}
+        code_stock: dict[str, float] = {}
+        for rec in odoo_products:
+            default_code = (rec.get("default_code") or "").strip()
+            if not default_code:
+                continue
+            code_map[default_code] = rec
+            odoo_id = rec["id"]
+            code_stock[default_code] = code_stock.get(default_code, 0) + stock_map.get(odoo_id, 0)
 
-                raw_stock = stock_map.get(odoo_id, 0)
+        async with async_session() as db:
+            for default_code, rec in code_map.items():
+                odoo_id = rec["id"]
+                raw_stock = code_stock.get(default_code, 0)
                 # Clamp to int32 range; treat extreme negatives as 0
                 stock_qty = max(0, min(int(raw_stock), 2_147_483_647))
 

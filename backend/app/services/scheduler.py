@@ -33,12 +33,17 @@ class AsyncScheduler:
     def __init__(self):
         self._tasks: dict[str, _Task] = {}
         self._stop_event = asyncio.Event()
+        self._started = False
 
     def register(self, name: str, coro_func: Callable[[], Coroutine], interval_seconds: float):
         self._tasks[name] = _Task(name, coro_func, interval_seconds)
         logger.info("Scheduler: registered task '%s' (every %ds)", name, int(interval_seconds))
 
     async def start(self):
+        if self._started:
+            logger.warning("Scheduler: already started, skipping duplicate start")
+            return
+        self._started = True
         self._stop_event.clear()
         for task in self._tasks.values():
             task.handle = asyncio.create_task(self._run_loop(task))
