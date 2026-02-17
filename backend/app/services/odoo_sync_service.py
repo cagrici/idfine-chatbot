@@ -4,6 +4,7 @@ Periodically fetches product prices and stock levels from Odoo ERP
 and upserts them into the local products table.
 """
 
+import asyncio
 import logging
 from datetime import datetime, timezone
 
@@ -20,6 +21,9 @@ from app.services.cache_service import CacheService
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+# Module-level lock prevents concurrent sync operations (across duplicate startup calls)
+_sync_lock = asyncio.Lock()
+
 
 class OdooSyncService:
     """Synchronises Odoo product data to the local PostgreSQL database."""
@@ -34,6 +38,13 @@ class OdooSyncService:
 
     async def delta_sync(self):
         """Incremental sync — only products modified since the last sync."""
+        if _sync_lock.locked():
+            logger.info("Delta sync: skipped (another sync in progress)")
+            return
+        async with _sync_lock:
+            await self._delta_sync_impl()
+
+    async def _delta_sync_impl(self):
         log = await self._start_log("delta")
         try:
             last_write_date = await self._get_last_write_date()
@@ -62,6 +73,13 @@ class OdooSyncService:
 
     async def full_sync(self):
         """Full sync — fetch all products, deactivate removed ones."""
+        if _sync_lock.locked():
+            logger.info("Full sync: skipped (another sync in progress)")
+            return
+        async with _sync_lock:
+            await self._full_sync_impl()
+
+    async def _full_sync_impl(self):
         log = await self._start_log("full")
         try:
             offset = 0
