@@ -20,6 +20,9 @@ class CustomerSession:
     name: str
     verified_at: str
     visitor_id: str
+    pricelist_id: int | None = None
+    pricelist_name: str | None = None
+    discount_percent: float = 0
 
 
 class CustomerSessionService:
@@ -37,6 +40,9 @@ class CustomerSessionService:
         partner_id: int,
         email: str,
         name: str,
+        pricelist_id: int | None = None,
+        pricelist_name: str | None = None,
+        discount_percent: float = 0,
     ) -> CustomerSession:
         """Create a new customer session after OTP verification."""
         now = datetime.now(timezone.utc).isoformat()
@@ -46,6 +52,9 @@ class CustomerSessionService:
             "name": name,
             "verified_at": now,
             "visitor_id": visitor_id,
+            "pricelist_id": pricelist_id,
+            "pricelist_name": pricelist_name,
+            "discount_percent": discount_percent,
         }
 
         key = self._session_key(visitor_id)

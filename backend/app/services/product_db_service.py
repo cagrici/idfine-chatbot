@@ -159,10 +159,20 @@ class ProductDBService:
         result = await self.db.execute(stmt)
         return [self._product_to_dict(p) for p in result.scalars().all()]
 
-    def format_products_context(self, products: list[dict]) -> str:
-        """Format product list into text context for LLM."""
+    def format_products_context(self, products: list[dict], pricelist_info: dict | None = None) -> str:
+        """Format product list into text context for LLM.
+
+        If pricelist_info is provided (authenticated customer), applies their
+        discount to the base price.
+        """
         if not products:
             return ""
+
+        discount = 0.0
+        pricelist_name = ""
+        if pricelist_info:
+            discount = pricelist_info.get("discount_percent", 0)
+            pricelist_name = pricelist_info.get("pricelist_name", "")
 
         lines = []
         for p in products:
@@ -183,7 +193,13 @@ class ProductDBService:
             if p.get('ana_renk'):
                 parts.append(f"  Renk: {p['ana_renk']}")
             if p.get('fiyat') and float(p['fiyat']) > 0:
-                parts.append(f"  Fiyat: {p['fiyat']} {p.get('para_birimi', 'TRY')}")
+                base_price = float(p['fiyat'])
+                currency = p.get('para_birimi', 'TRY')
+                if discount > 0:
+                    customer_price = base_price * (1 - discount / 100)
+                    parts.append(f"  Fiyat: {customer_price:,.2f} {currency} ({pricelist_name})")
+                else:
+                    parts.append(f"  Fiyat: {p['fiyat']} {currency}")
             if p.get('stok') is not None:
                 stok_val = p['stok']
                 if stok_val > 0:

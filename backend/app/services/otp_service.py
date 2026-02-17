@@ -1,5 +1,6 @@
 """OTP (One-Time Password) service for customer authentication via email."""
 
+import asyncio
 import hashlib
 import json
 import logging
@@ -9,6 +10,7 @@ from dataclasses import dataclass
 import redis.asyncio as redis
 
 from app.config import get_settings
+from app.services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -24,10 +26,11 @@ class OTPResult:
 
 
 class OTPService:
-    """Manages OTP generation, storage (Redis), verification, and email sending via Odoo."""
+    """Manages OTP generation, storage (Redis), verification, and email sending via SMTP."""
 
     def __init__(self, redis_client: redis.Redis):
         self.redis = redis_client
+        self._email_service = EmailService()
 
     def _email_hash(self, email: str) -> str:
         return hashlib.sha256(email.lower().strip().encode()).hexdigest()[:16]
@@ -206,7 +209,7 @@ class OTPService:
     async def _send_otp_email(
         self, odoo_adapter, email: str, code: str, partner_name: str | None
     ) -> None:
-        """Send OTP email using Odoo mail.mail model."""
+        """Send OTP email via SMTP."""
         name = partner_name or "Degerli Musterimiz"
         subject = "ID Fine - Dogrulama Kodunuz"
         body_html = f"""
@@ -232,14 +235,8 @@ class OTPService:
         </div>
         """
 
-        mail_vals = {
-            "subject": subject,
-            "body_html": body_html,
-            "email_to": email,
-            "email_from": "noreply@idfine.com",
-            "auto_delete": True,
-        }
-
-        mail_id = await odoo_adapter.call("mail.mail", "create", [mail_vals])
-        await odoo_adapter.call("mail.mail", "send", [[mail_id]])
-        logger.info("OTP email sent to %s (mail.mail id=%s)", email, mail_id)
+        # Send via SMTP in a thread to avoid blocking the event loop
+        sent = await asyncio.to_thread(self._email_service.send, email, subject, body_html)
+        if not sent:
+            raise RuntimeError("SMTP email sending failed")
+        logger.info("OTP email sent to %s via SMTP", email)

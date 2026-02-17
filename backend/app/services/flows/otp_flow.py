@@ -120,12 +120,18 @@ class OTPFlowHandler(FlowHandler):
         if not result.success:
             return FlowStepResult(message=result.message)
 
+        # Fetch customer's pricelist info from Odoo
+        pricelist_info = await self._fetch_partner_pricelist(result.partner_id)
+
         # Create customer session
         await self.session.create_session(
             visitor_id=visitor_id,
             partner_id=result.partner_id,
             email=result.email,
             name=result.partner_name or "",
+            pricelist_id=pricelist_info.get("pricelist_id"),
+            pricelist_name=pricelist_info.get("pricelist_name"),
+            discount_percent=pricelist_info.get("discount_percent", 0),
         )
 
         # Determine what the user originally wanted
@@ -144,3 +150,55 @@ class OTPFlowHandler(FlowHandler):
                 "original_intent": original_intent,
             },
         )
+
+    async def _fetch_partner_pricelist(self, partner_id: int) -> dict:
+        """Fetch the customer's pricelist and discount info from Odoo."""
+        try:
+            # Get partner's assigned pricelist
+            partners = await self.odoo_adapter.call(
+                "res.partner",
+                "read",
+                [[partner_id]],
+                {"fields": ["property_product_pricelist"]},
+            )
+            if not partners or not partners[0].get("property_product_pricelist"):
+                return {}
+
+            pl = partners[0]["property_product_pricelist"]
+            pricelist_id = pl[0] if isinstance(pl, list) else pl
+            pricelist_name = pl[1] if isinstance(pl, list) and len(pl) > 1 else ""
+
+            # Look for a global discount item on this pricelist
+            items = await self.odoo_adapter.call(
+                "product.pricelist.item",
+                "search_read",
+                [[[
+                    "pricelist_id", "=", pricelist_id,
+                ]]],
+                {"fields": ["applied_on", "compute_price", "percent_price", "price_discount"], "limit": 10},
+            )
+
+            discount_percent = 0.0
+            for item in items:
+                # Global items (applied_on = "3_global") with formula pricing
+                if item.get("applied_on") == "3_global" and item.get("compute_price") == "formula":
+                    discount_percent = item.get("price_discount") or 0
+                    break
+                # Percentage-based pricing
+                if item.get("applied_on") == "3_global" and item.get("compute_price") == "percentage":
+                    discount_percent = item.get("percent_price") or 0
+                    break
+
+            logger.info(
+                "Partner %d pricelist: id=%s, name=%s, discount=%.1f%%",
+                partner_id, pricelist_id, pricelist_name, discount_percent,
+            )
+
+            return {
+                "pricelist_id": pricelist_id,
+                "pricelist_name": pricelist_name,
+                "discount_percent": discount_percent,
+            }
+        except Exception as e:
+            logger.warning("Failed to fetch pricelist for partner %d: %s", partner_id, e)
+            return {}

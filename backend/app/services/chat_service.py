@@ -269,7 +269,7 @@ class ChatService:
 
         # Standard flow
         context, sources, product_context = await self._gather_context(
-            user_message, intent, source_group_id
+            user_message, intent, source_group_id, visitor_id
         )
         history = await self.get_conversation_history(conv.id)
 
@@ -465,7 +465,7 @@ class ChatService:
 
         # --- Step 7: Standard flow (RAG + ProductDB + LLM) ---
         context, sources, product_context = await self._gather_context(
-            user_message, intent, source_group_id
+            user_message, intent, source_group_id, visitor_id
         )
         history = await self.get_conversation_history(conv.id)
 
@@ -810,6 +810,7 @@ class ChatService:
 
     async def _gather_context(
         self, user_message: str, intent: Intent, source_group_id: str | None = None,
+        visitor_id: str | None = None,
     ) -> tuple[str, list[dict], str]:
         """Gather context from RAG and product DB in parallel."""
         context = ""
@@ -827,7 +828,16 @@ class ChatService:
             Intent.PRICE_INQUIRY, Intent.STOCK_CHECK,
             Intent.PRODUCT_INFO, Intent.HYBRID,
         ) and perms.get("product_db_enabled", True):
-            tasks.append(("product_db", self._get_product_context(user_message, intent)))
+            # Check for customer-specific pricelist
+            pricelist_info = None
+            if self.customer_session and visitor_id:
+                session = await self.customer_session.get_session(visitor_id)
+                if session and session.pricelist_id:
+                    pricelist_info = {
+                        "pricelist_name": session.pricelist_name,
+                        "discount_percent": session.discount_percent,
+                    }
+            tasks.append(("product_db", self._get_product_context(user_message, intent, pricelist_info)))
 
         if tasks:
             results = await asyncio.gather(
@@ -850,7 +860,7 @@ class ChatService:
         sources = self.rag.get_sources(chunks, max_chunks=5)
         return context, sources
 
-    async def _get_product_context(self, message: str, intent: Intent) -> str:
+    async def _get_product_context(self, message: str, intent: Intent, pricelist_info: dict | None = None) -> str:
         """Query product database and format as context text."""
         products = []
 
@@ -864,7 +874,7 @@ class ChatService:
         if not products:
             return ""
 
-        return self.product_db.format_products_context(products)
+        return self.product_db.format_products_context(products, pricelist_info)
 
     def _extract_order_ref(self, message: str) -> str | None:
         patterns = [
