@@ -157,7 +157,9 @@ class OdooSyncService:
                     # Products without a code can't be matched — skip
                     continue
 
-                stock_qty = int(stock_map.get(odoo_id, 0))
+                raw_stock = stock_map.get(odoo_id, 0)
+                # Clamp to int32 range; treat extreme negatives as 0
+                stock_qty = max(0, min(int(raw_stock), 2_147_483_647))
 
                 # Try to find existing product by odoo_product_id first, then by urun_kodu
                 product = await self._find_product(db, odoo_id, default_code)
