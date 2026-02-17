@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import (
-    Boolean, DateTime, Index, Integer, Numeric, String, Text, func,
+    BigInteger, Boolean, DateTime, Index, Integer, Numeric, String, Text, func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -45,6 +45,14 @@ class Product(Base):
     stok: Mapped[int] = mapped_column(Integer, default=0)
     aktif: Mapped[bool] = mapped_column(Boolean, default=True)
     image: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Odoo sync tracking
+    odoo_product_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    odoo_write_date: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    last_synced_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -60,4 +68,5 @@ class Product(Base):
         Index("idx_products_servis_tipi", "servis_tipi"),
         Index("idx_products_aktif", "aktif"),
         Index("idx_products_materyal", "materyal"),
+        Index("idx_products_odoo_product_id", "odoo_product_id", unique=True),
     )

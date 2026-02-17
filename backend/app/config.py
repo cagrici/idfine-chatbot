@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     odoo_catalog_url: str = ""
     odoo_catalog_url_en: str = ""
 
+    # Odoo Sync
+    odoo_sync_enabled: bool = True
+    odoo_sync_interval_minutes: int = 30
+    odoo_sync_batch_size: int = 200
+    odoo_sync_full_interval_hours: int = 24
+
     # Security
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"

@@ -72,6 +72,45 @@ def create_app() -> FastAPI:
         except Exception as e:
             logger.warning("Failed to preload embedding model: %s", e)
 
+        # Start Odoo product sync scheduler
+        if settings.odoo_sync_enabled and settings.odoo_url:
+            try:
+                import redis.asyncio as aioredis
+                from app.services.cache_service import CacheService
+                from app.services.odoo_service import create_odoo_adapter
+                from app.services.odoo_sync_service import OdooSyncService
+                from app.services.scheduler import scheduler
+
+                adapter = create_odoo_adapter()
+                redis_client = aioredis.from_url(settings.redis_url)
+                cache = CacheService(redis_client)
+                sync_service = OdooSyncService(adapter, cache)
+
+                scheduler.register(
+                    "odoo_delta_sync",
+                    sync_service.delta_sync,
+                    settings.odoo_sync_interval_minutes * 60,
+                )
+                scheduler.register(
+                    "odoo_full_sync",
+                    sync_service.full_sync,
+                    settings.odoo_sync_full_interval_hours * 3600,
+                )
+                await scheduler.start()
+                logger.info("Odoo sync scheduler started (delta: %dm, full: %dh)",
+                            settings.odoo_sync_interval_minutes,
+                            settings.odoo_sync_full_interval_hours)
+            except Exception as e:
+                logger.warning("Failed to start Odoo sync scheduler: %s", e)
+
+    @app.on_event("shutdown")
+    async def shutdown():
+        try:
+            from app.services.scheduler import scheduler
+            await scheduler.stop()
+        except Exception:
+            pass
+
     return app
 
 

@@ -16,6 +16,7 @@ from app.api.widget import router as widget_router
 from app.api.widget_configs import router as widget_configs_router
 from app.api.social_media import router as social_media_router
 from app.meta.webhooks import router as meta_webhook_router
+from app.api.sync import router as sync_router
 from app.odoo.webhooks import router as webhook_router
 
 api_router = APIRouter(prefix="/api")
@@ -35,6 +36,7 @@ api_router.include_router(canned_responses_router)
 api_router.include_router(reports_router)
 api_router.include_router(social_media_router)
 api_router.include_router(meta_webhook_router)
+api_router.include_router(sync_router)
 
 # WebSocket routes are at root level (no /api prefix)
 ws_router = ws_router
