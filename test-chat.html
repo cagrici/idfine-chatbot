@@ -15,7 +15,7 @@
             --accent-color: #000000;
             --message-user-bg: #f3f3f3;
             --message-assistant-bg: transparent;
-            --font-family: "universalSans", var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         * {
@@ -294,6 +294,39 @@
             transform: translateY(-1px);
         }
 
+        /* Bottom Links */
+        .bottom-links {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #888;
+            transition: opacity 0.3s ease;
+        }
+
+        .chat-active .bottom-links {
+            display: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .bottom-links a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .bottom-links a:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+
+        .bottom-links .divider {
+            color: #ddd;
+        }
+
         /* Markdown Styles */
         .message-bubble.assistant h3,
         .message-bubble.assistant h4 {
@@ -467,6 +500,15 @@
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
                     Request Quote</button>
+            </div>
+
+            <!-- Bottom Links (Visible Initially) -->
+            <div class="bottom-links" id="bottomLinks">
+                <a href="/idfine/" target="_blank">Chat Widget</a>
+                <span class="divider">·</span>
+                <a href="/api/docs" target="_blank">API Docs</a>
+                <span class="divider">·</span>
+                <a href="/health" target="_blank">Health Check</a>
             </div>
         </div>
 
