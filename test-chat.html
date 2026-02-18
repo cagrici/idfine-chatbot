@@ -67,6 +67,23 @@
             color: #047857;
         }
 
+        .login-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-decoration: none;
+        }
+
+        .login-btn:hover {
+            opacity: 0.9;
+        }
+
         /* Main Layout */
         .main-container {
             flex: 1;
@@ -375,7 +392,10 @@
     <!-- Top Left Corner -->
     <div class="top-bar">
         <img src="images/logo-dark-mobile.png" alt="Logo" class="corner-logo">
-        <span id="connectionStatus" class="status-badge">Connecting...</span>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <span id="connectionStatus" class="status-badge">Connecting...</span>
+            <button class="login-btn" onclick="window.location.href='/admin/'">Oturum Aç</button>
+        </div>
     </div>
 
     <!-- Main Content -->
