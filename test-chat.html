@@ -264,6 +264,9 @@
             cursor: pointer;
             transition: all 0.2s ease;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .starter-btn:hover {
@@ -408,10 +411,40 @@
 
             <!-- Starter Buttons (Visible Initially) -->
             <div class="starter-buttons" id="starterButtons">
-                <button class="starter-btn" onclick="sendQuickMessage('Menu Analysis')">Menu Analysis</button>
-                <button class="starter-btn" onclick="sendQuickMessage('Choose Your Plate')">Choose Your Plate</button>
-                <button class="starter-btn" onclick="sendQuickMessage('Collections')">Collections</button>
-                <button class="starter-btn" onclick="sendQuickMessage('Request Quote')">Request Quote</button>
+                <button class="starter-btn" onclick="sendQuickMessage('Menu Analysis')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Menu Analysis</button>
+                <button class="starter-btn" onclick="sendQuickMessage('Choose Your Plate')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 8v4l3 3"></path>
+                    </svg>
+                    Choose Your Plate</button>
+                <button class="starter-btn" onclick="sendQuickMessage('Collections')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Collections</button>
+                <button class="starter-btn" onclick="sendQuickMessage('Request Quote')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Request Quote</button>
             </div>
         </div>
 
