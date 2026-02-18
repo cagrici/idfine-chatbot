@@ -394,7 +394,7 @@
         <img src="images/logo-dark-mobile.png" alt="Logo" class="corner-logo">
         <div style="display:flex; gap:12px; align-items:center;">
             <span id="connectionStatus" class="status-badge">Connecting...</span>
-            <button class="login-btn" onclick="window.location.href='/admin/'">Oturum Aç</button>
+            <button class="login-btn" onclick="sendQuickMessage('Oturum aç')">Oturum Aç</button>
         </div>
     </div>
 
@@ -421,7 +421,7 @@
         <!-- Input Section -->
         <div class="input-section">
             <div class="input-wrapper">
-                <input type="text" id="chatInput" placeholder="Ask anything..." autocomplete="off">
+                <input type="text" id="chatInput" placeholder="ID Fine ve ürünleri hakkıdna sor..." autocomplete="off">
                 <button id="sendButton" class="send-btn" disabled>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">

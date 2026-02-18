@@ -546,7 +546,7 @@ class ChatService:
         )
         return (
             "Bu bilgilere erismek icin kimliginizi dogrulamam gerekiyor.\n"
-            "Lutfen Odoo hesabiniza kayitli **e-posta adresinizi** yazin."
+            "Lutfen ID Fine ERP hesabiniza kayitli **e-posta adresinizi** yazin."
         )
 
     async def _handle_logout(self, visitor_id: str | None) -> str:
@@ -622,7 +622,7 @@ class ChatService:
     ) -> str:
         """Handle customer intents by querying Odoo and formatting as context text."""
         if not self.odoo:
-            return "Odoo baglantisi yapilamiyor. Lutfen daha sonra tekrar deneyin."
+            return "ID Fine ERP baglantisi yapilamiyor. Lutfen daha sonra tekrar deneyin."
 
         try:
             if intent == Intent.ORDER_HISTORY:
