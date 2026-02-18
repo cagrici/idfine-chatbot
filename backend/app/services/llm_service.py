@@ -102,6 +102,7 @@ Kategoriler:
 - SUPPORT_TICKET_CREATE: Destek talebi, sorun bildirmek
 - SUPPORT_TICKET_LIST: Taleplerim, ticket'larım
 - SPENDING_REPORT: Harcama raporu, istatistik
+- FIND_DEALER: Bayi bulmak, satış noktası aramak, yakınımdaki bayi
 - CUSTOMER_AUTH: Giriş yap, kimlik doğrula
 - CUSTOMER_LOGOUT: Çıkış yap
 
@@ -130,6 +131,7 @@ Kullanıcı mesajı: """
             "PROFILE_VIEW", "PROFILE_UPDATE", "ADDRESS_UPDATE",
             "SUPPORT_TICKET_CREATE", "SUPPORT_TICKET_LIST",
             "CATALOG_REQUEST", "SPENDING_REPORT",
+            "FIND_DEALER",
             "CUSTOMER_AUTH", "CUSTOMER_LOGOUT",
         }
 

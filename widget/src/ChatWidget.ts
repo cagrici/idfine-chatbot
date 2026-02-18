@@ -106,6 +106,12 @@ export class ChatWidget {
         </div>
       </div>
       <div class="idf-messages"></div>
+      <div class="idf-quick-actions">
+        <button class="idf-quick-action" data-message="Bayi bulmak istiyorum">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Bayi Bul
+        </button>
+      </div>
       <div class="idf-input-area">
         <textarea rows="1" placeholder="${this.config.placeholder}"></textarea>
         <button>Gönder</button>
@@ -144,6 +150,17 @@ export class ChatWidget {
       this.textarea.style.height = "auto";
       this.textarea.style.height =
         Math.min(this.textarea.scrollHeight, 100) + "px";
+    });
+
+    // Quick action buttons
+    this.container.querySelectorAll(".idf-quick-action").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const msg = (btn as HTMLElement).dataset.message;
+        if (msg) {
+          this.textarea.value = msg;
+          this.sendMessage();
+        }
+      });
     });
 
     // Image thumbnail click → lightbox
@@ -295,6 +312,10 @@ export class ChatWidget {
   private sendMessage() {
     const content = this.textarea.value.trim();
     if (!content || this.isStreaming) return;
+
+    // Hide quick actions after first message
+    const qa = this.container.querySelector(".idf-quick-actions") as HTMLElement;
+    if (qa) qa.style.display = "none";
 
     // Add user message
     this.addMessage({

@@ -23,6 +23,7 @@ from app.services.customer_session_service import CustomerSessionService
 from app.services.flows.address_flow import AddressFlowHandler
 from app.services.flows.cancel_order_flow import CancelOrderFlowHandler
 from app.services.flows.complaint_flow import ComplaintFlowHandler
+from app.services.flows.dealer_flow import DealerFlowHandler
 from app.services.flows.order_flow import OrderFlowHandler
 from app.services.flows.otp_flow import OTPFlowHandler
 from app.services.flows.quotation_flow import QuotationFlowHandler
@@ -70,6 +71,7 @@ async def _create_chat_dependencies(settings: Settings):
         flow_manager.register_handler(AddressFlowHandler(odoo_service, customer_session))
         flow_manager.register_handler(OrderFlowHandler(odoo_service, customer_session))
         flow_manager.register_handler(QuotationFlowHandler(odoo_service, customer_session))
+        flow_manager.register_handler(DealerFlowHandler(odoo_service))
 
     return {
         "rag_engine": rag_engine,

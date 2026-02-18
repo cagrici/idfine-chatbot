@@ -37,6 +37,7 @@ class Intent(StrEnum):
     CATALOG_REQUEST = "CATALOG_REQUEST"
     SPENDING_REPORT = "SPENDING_REPORT"
     COMPLAINT = "COMPLAINT"
+    FIND_DEALER = "FIND_DEALER"
     CUSTOMER_AUTH = "CUSTOMER_AUTH"
     CUSTOMER_LOGOUT = "CUSTOMER_LOGOUT"
 
@@ -200,6 +201,12 @@ _LOGOUT_KEYWORDS = re.compile(
     r"\b([cç][iı]k[iı][sş]\s*yap|oturum\s*kapat|logout|sign\s*out|[cç][iı]k[iı][sş])\b",
     re.IGNORECASE,
 )
+_FIND_DEALER_KEYWORDS = re.compile(
+    r"\b(bayi\s*bul|bayi\s*ara|yak[iı]n[iı]mdaki\s*bayi|bayiler|bayi\s*listesi"
+    r"|sat[iı][sş]\s*noktas[iı]|dealer|find\s*dealer|nearest\s*dealer"
+    r"|bayi\s*nerede|sati[sş]\s*noktalar[iı]|bayi\s*sorgula)\b",
+    re.IGNORECASE,
+)
 
 
 class IntentClassifier:
@@ -273,6 +280,10 @@ class IntentClassifier:
             return Intent.PROFILE_UPDATE
         if _PROFILE_KEYWORDS.search(text):
             return Intent.PROFILE_VIEW
+
+        # Find Dealer (no auth required)
+        if _FIND_DEALER_KEYWORDS.search(text):
+            return Intent.FIND_DEALER
 
         # Complaint (before support - no auth required)
         if _COMPLAINT_KEYWORDS.search(text):

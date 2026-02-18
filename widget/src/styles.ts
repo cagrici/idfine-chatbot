@@ -370,6 +370,44 @@ export function getStyles(config: WidgetConfig): string {
       30% { transform: translateY(-6px); }
     }
 
+    /* ── Quick Actions ── */
+    .idf-quick-actions {
+      padding: 8px 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .idf-quick-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      background: #fff;
+      color: #4a5568;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .idf-quick-action:hover {
+      background: ${brandColor};
+      color: white;
+      border-color: ${brandColor};
+    }
+
+    .idf-quick-action svg {
+      flex-shrink: 0;
+    }
+
+    .idf-quick-action:hover svg {
+      stroke: white;
+    }
+
     /* ── Input Area ── */
     .idf-input-area {
       padding: 10px 14px;
