@@ -407,16 +407,25 @@ class ChatService:
                         original_intent_str = flow_result.data["original_intent"]
                         try:
                             original_intent = Intent(original_intent_str)
-                            customer_data = await self._handle_customer_intent(
-                                original_intent, user_message, flow_result.data.get("partner_id"), visitor_id
-                            )
-                            if customer_data:
-                                history = await self.get_conversation_history(conv.id)
-                                async for chunk in self._stream_llm_response(
-                                    user_message, "", [], "", customer_data,
-                                    history, message_id, conv, original_intent
-                                ):
-                                    yield chunk
+                            # If original intent has a multi-step flow (e.g. QUOTE_REQUEST →
+                            # QUOTATION_CREATE), start that flow now instead of asking the LLM
+                            flow_msg = await self._maybe_start_flow(original_intent, conv_id_str, visitor_id)
+                            if flow_msg:
+                                yield {"type": "stream_start", "message_id": message_id}
+                                yield {"type": "stream_chunk", "content": flow_msg, "message_id": message_id}
+                                yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": original_intent.value}
+                                await self._save_assistant_message(conv.id, flow_msg, original_intent, [], None)
+                            else:
+                                customer_data = await self._handle_customer_intent(
+                                    original_intent, user_message, flow_result.data.get("partner_id"), visitor_id
+                                )
+                                if customer_data:
+                                    history = await self.get_conversation_history(conv.id)
+                                    async for chunk in self._stream_llm_response(
+                                        user_message, "", [], "", customer_data,
+                                        history, message_id, conv, original_intent
+                                    ):
+                                        yield chunk
                         except (ValueError, Exception) as e:
                             logger.error("Error re-processing original intent: %s", e)
                     return
