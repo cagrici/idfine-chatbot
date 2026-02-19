@@ -164,7 +164,7 @@ class ProductDBService:
 
         If pricelist_info is provided (authenticated customer), applies their
         discount to the base price.
-        If guest_mode is True, stock quantity is hidden (only Var/Yok shown).
+        If guest_mode is True, price is hidden entirely and stock shows only Var/Yok.
         """
         if not products:
             return ""
@@ -193,7 +193,7 @@ class ProductDBService:
                 parts.append(f"  Materyal: {p['materyal']}")
             if p.get('ana_renk'):
                 parts.append(f"  Renk: {p['ana_renk']}")
-            if p.get('fiyat') and float(p['fiyat']) > 0:
+            if not guest_mode and p.get('fiyat') and float(p['fiyat']) > 0:
                 base_price = float(p['fiyat'])
                 currency = p.get('para_birimi', 'TRY')
                 if discount > 0:

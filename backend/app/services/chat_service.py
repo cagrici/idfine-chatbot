@@ -978,7 +978,7 @@ class ChatService:
                             "pricelist_name": session.pricelist_name,
                             "discount_percent": session.discount_percent,
                         }
-            guest_mode = (intent == Intent.STOCK_CHECK and not has_session)
+            guest_mode = not has_session  # guests see no price and Var/Yok for stock
             tasks.append(("product_db", self._get_product_context(user_message, intent, pricelist_info, guest_mode)))
 
         if tasks:
