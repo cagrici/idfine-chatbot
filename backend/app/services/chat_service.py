@@ -725,6 +725,14 @@ class ChatService:
         }
 
         await self.flow_manager.start_flow(conv_id, flow_type)
+
+        # FIND_DEALER: auto-process first step to load cities immediately
+        if flow_type == FlowType.FIND_DEALER:
+            result = await self.flow_manager.process_step(conv_id, "", visitor_id or "")
+            if result and result.message:
+                return result.message
+            return prompt_messages.get(flow_type, "Islem basladi. Lutfen bilgileri girin.")
+
         return prompt_messages.get(flow_type, "Islem basladi. Lutfen bilgileri girin.")
 
     async def _handle_customer_intent(
