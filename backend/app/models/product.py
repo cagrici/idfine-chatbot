@@ -33,6 +33,7 @@ class Product(Base):
     kullanim_alani: Mapped[str | None] = mapped_column(String(255), nullable=True)
     servis_tipi: Mapped[str | None] = mapped_column(String(255), nullable=True)
     mutfak_uyumu: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    menu_ana_baslik: Mapped[str | None] = mapped_column(String(255), nullable=True)
     yemek_onerileri: Mapped[str | None] = mapped_column(Text, nullable=True)
     konsept_etiketler: Mapped[str | None] = mapped_column(Text, nullable=True)
     rekabet_avantaji: Mapped[str | None] = mapped_column(Text, nullable=True)

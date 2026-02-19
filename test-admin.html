@@ -1395,9 +1395,16 @@
                             </select>
                         </div>
                     </div>
-                    ${hasPerm('documents.upload') ? `
-                        <button class="btn btn-primary" onclick="showCreateProductModal()">+ Yeni Ürün</button>
-                    ` : ''}
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <button class="btn" style="background:#10b981;color:#fff" onclick="downloadProductTemplate()">Şablon İndir</button>
+                        ${hasPerm('documents.upload') ? `
+                            <label class="btn" style="background:#6366f1;color:#fff;cursor:pointer;margin:0">
+                                Excel Yükle
+                                <input type="file" accept=".xlsx" style="display:none" onchange="uploadProductExcel(this)">
+                            </label>
+                            <button class="btn btn-primary" onclick="showCreateProductModal()">+ Yeni Ürün</button>
+                        ` : ''}
+                    </div>
                 </div>
                 <table class="doc-table" id="productsTable">
                     <thead>
@@ -1426,6 +1433,56 @@
         function debounceProdSearch() {
             clearTimeout(prodSearchTimer);
             prodSearchTimer = setTimeout(() => { prodCurrentPage = 0; loadProducts(); }, 300);
+        }
+
+        async function downloadProductTemplate() {
+            try {
+                const res = await fetch(API + '/admin/products/template', {
+                    headers: { 'Authorization': 'Bearer ' + token },
+                });
+                if (!res.ok) { alert('Şablon indirilemedi'); return; }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'urun-sablonu.xlsx';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('İndirme hatası: ' + e.message);
+            }
+        }
+
+        async function uploadProductExcel(input) {
+            const file = input.files[0];
+            if (!file) return;
+            input.value = '';
+
+            const fd = new FormData();
+            fd.append('file', file);
+
+            try {
+                const res = await fetch(API + '/admin/products/import', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: fd,
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert('Hata: ' + (data.detail || 'Bilinmeyen hata'));
+                    return;
+                }
+                let msg = `Excel import tamamlandı:\n\n`;
+                msg += `✓ ${data.created} yeni ürün eklendi\n`;
+                msg += `✓ ${data.updated} ürün güncellendi\n`;
+                if (data.skipped) msg += `- ${data.skipped} satır atlandı\n`;
+                if (data.errors?.length) msg += `\n⚠ ${data.errors.length} hata:\n` + data.errors.slice(0, 5).join('\n');
+                alert(msg);
+                prodCurrentPage = 0;
+                loadProducts();
+            } catch (e) {
+                alert('Yükleme hatası: ' + e.message);
+            }
         }
 
         async function loadProducts() {

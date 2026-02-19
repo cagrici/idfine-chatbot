@@ -25,6 +25,7 @@ class ProductBase(BaseModel):
     kullanim_alani: str | None = None
     servis_tipi: str | None = None
     mutfak_uyumu: str | None = None
+    menu_ana_baslik: str | None = None
     yemek_onerileri: str | None = None
     konsept_etiketler: str | None = None
     rekabet_avantaji: str | None = None
@@ -64,6 +65,7 @@ class UpdateProductRequest(BaseModel):
     kullanim_alani: str | None = None
     servis_tipi: str | None = None
     mutfak_uyumu: str | None = None
+    menu_ana_baslik: str | None = None
     yemek_onerileri: str | None = None
     konsept_etiketler: str | None = None
     rekabet_avantaji: str | None = None
