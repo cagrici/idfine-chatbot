@@ -39,19 +39,29 @@ class ProductDBService:
                 parts.append(col.ilike(like))
         return or_(*parts)
 
+    _STOCK_QUERY_RE = re.compile(r'\bstokta\b|\bstoklu\b|\bmevcut\b', re.IGNORECASE)
+
     async def search_products(self, query: str, limit: int = 10) -> list[dict]:
         """Search products by keyword matching. Tries AND first, falls back to OR."""
         keywords = self._extract_keywords(query)
         if not keywords:
             return []
 
+        # Detect "stokta olan" type queries → filter stok > 0 and order by stok
+        stock_only = bool(self._STOCK_QUERY_RE.search(query))
+
         kw_conditions = [self._keyword_condition(kw) for kw in keywords]
+        base_filters = [Product.aktif == True]
+        if stock_only:
+            base_filters.append(Product.stok > 0)
+
+        order = (Product.stok.desc(), Product.fiyat.desc().nullslast()) if stock_only else (Product.fiyat.desc().nullslast(),)
 
         # Try AND first (all keywords must match)
         stmt = (
             select(Product)
-            .where(and_(Product.aktif == True, *kw_conditions))
-            .order_by(Product.fiyat.desc().nullslast())
+            .where(and_(*base_filters, *kw_conditions))
+            .order_by(*order)
             .limit(limit)
         )
         result = await self.db.execute(stmt)
@@ -61,8 +71,8 @@ class ProductDBService:
         if not products and len(keywords) > 1:
             stmt = (
                 select(Product)
-                .where(and_(Product.aktif == True, or_(*kw_conditions)))
-                .order_by(Product.fiyat.desc().nullslast())
+                .where(and_(*base_filters, or_(*kw_conditions)))
+                .order_by(*order)
                 .limit(limit)
             )
             result = await self.db.execute(stmt)
