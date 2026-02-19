@@ -268,6 +268,8 @@ class JsonRpcAdapter(OdooAdapter):
             "partner_id": partner_id,
             "warehouse_id": warehouse_id,
         }
+        if settings.odoo_analytic_account_id:
+            vals["analytic_account_id"] = settings.odoo_analytic_account_id
         if order_lines:
             vals["order_line"] = order_lines
         if notes:

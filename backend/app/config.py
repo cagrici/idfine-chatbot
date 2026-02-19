@@ -51,7 +51,8 @@ class Settings(BaseSettings):
     odoo_sync_batch_size: int = 200
     odoo_sync_full_interval_hours: int = 24
     odoo_sync_pricelist_id: int = 0  # Odoo pricelist ID for prices (0 = use list_price)
-    odoo_warehouse_id: int = 0       # Odoo warehouse ID for quotations (0 = use first available)
+    odoo_warehouse_id: int = 0            # Odoo warehouse ID for quotations (0 = use first available)
+    odoo_analytic_account_id: int = 0    # Odoo analytic account ID for quotations (0 = skip)
 
     # Security
     jwt_secret: str = ""

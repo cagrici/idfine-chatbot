@@ -721,8 +721,13 @@ class ChatService:
                 "- **posta kodu** - Posta kodu"
             ),
             FlowType.QUOTATION_CREATE: (
-                "Fiyat teklifi talebi olusturmak icin yardimci olacagim.\n"
-                "Lutfen teklif almak istediginiz urunleri, miktarlari ve ozel isteklerinizi detayli olarak yazin."
+                "Fiyat teklifi talebi olusturmak icin yardimci olacagim.\n\n"
+                "Lutfen teklif almak istediginiz **urun kodlarini ve miktarlari** asagidaki formatta girin "
+                "(her urunu ayri satira):\n\n"
+                "**urun\\_kodu, miktar**\n\n"
+                "Ornek:\n"
+                "20257-111030, 50\n"
+                "20257-111031, 10"
             ),
             FlowType.COMPLAINT: (
                 "Sikayetinizi almak icin size yardimci olacagim.\n"
