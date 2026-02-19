@@ -145,12 +145,15 @@ class ProductDBService:
                 return category
         return None
 
-    async def search_products(self, query: str, limit: int = 10) -> list[dict]:
+    async def search_products(self, query: str, limit: int = 10, food_category: str | None = None) -> list[dict]:
         """Search products by keyword matching. Tries AND first, falls back to OR.
 
         If the query mentions a known food/dish type, prioritises products whose
         menu_ana_baslik contains the matching menu category (e.g. "kazandibi" →
         search menu_ana_baslik ILIKE '%Tatlılar%').
+
+        food_category: if provided externally (e.g. from AI classifier), skip
+        the internal regex detection and use this category directly.
         """
         keywords = self._extract_keywords(query)
         if not keywords:
@@ -167,9 +170,8 @@ class ProductDBService:
         price_order = (Product.stok.desc(), Product.fiyat.desc().nullslast()) if stock_only else (Product.fiyat.desc().nullslast(),)
 
         # ── Food-category shortcut ──────────────────────────────────────────
-        # If the query mentions a known food/dish (e.g. "kazandibi", "çorba"),
-        # search menu_ana_baslik directly for the matching category first.
-        food_cat = self._detect_food_category(query)
+        # Use externally provided category (AI-classified) or fall back to regex.
+        food_cat = food_category if food_category is not None else self._detect_food_category(query)
         if food_cat:
             stmt = (
                 select(Product)

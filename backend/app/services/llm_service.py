@@ -76,6 +76,44 @@ class LLMService:
             async for text in stream.text_stream:
                 yield text
 
+    # Known menu_ana_baslik categories used in the product DB
+    _MENU_CATEGORIES = [
+        "Çorbalar", "Tatlılar", "Et Yemekleri", "Balık & Deniz Ürünleri",
+        "Tavuk Yemekleri", "Pizza & Hamur İşleri", "Kahvaltı & Brunch",
+        "Başlangıçlar", "Salatalar", "Bowl", "Makarna", "Noodle", "Pilav",
+    ]
+
+    async def classify_food_category(self, query: str) -> str | None:
+        """Detect if the query references a food/dish and return its menu category.
+
+        Returns one of _MENU_CATEGORIES or None if no food is detected.
+        Uses the fast classifier model to keep latency/cost low.
+        """
+        categories = ", ".join(self._MENU_CATEGORIES)
+        prompt = (
+            f"Aşağıdaki sorguda belirtilen yemek veya yiyecek hangisini kategorisine girer?\n"
+            f"Kategoriler: {categories}\n"
+            f"Sadece kategori adını yaz. Eğer sorguda belirli bir yemek/yiyecek adı yoksa veya "
+            f"hiçbir kategoriye girmiyorsa sadece 'YOK' yaz. Başka hiçbir şey yazma.\n\n"
+            f"Sorgu: {query}"
+        )
+        try:
+            response = await self.client.messages.create(
+                model=settings.claude_classifier_model,
+                max_tokens=20,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            result = response.content[0].text.strip()
+            if result == "YOK":
+                return None
+            # Validate it's a known category (allow partial match)
+            for cat in self._MENU_CATEGORIES:
+                if cat.lower() in result.lower() or result.lower() in cat.lower():
+                    return cat
+        except Exception as e:
+            logger.warning("classify_food_category failed: %s", e)
+        return None
+
     async def classify_intent(self, message: str) -> str:
         """Classify user intent using a fast model."""
         classification_prompt = """Kullanıcının mesajını aşağıdaki kategorilerden birine sınıflandır.

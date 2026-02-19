@@ -1029,7 +1029,16 @@ class ChatService:
         elif intent == Intent.STOCK_CHECK:
             products = await self.product_db.get_stock_info(message, limit=10)
         elif intent in (Intent.PRODUCT_INFO, Intent.HYBRID):
-            products = await self.product_db.search_products(message, limit=10)
+            # 1. Try regex-based food category detection
+            food_cat = ProductDBService._detect_food_category(message)
+            # 2. AI fallback for foods not covered by regex
+            if not food_cat:
+                try:
+                    food_cat = await self.llm.classify_food_category(message)
+                except Exception as e:
+                    logger.warning("AI food category fallback failed: %s", e)
+                    food_cat = None
+            products = await self.product_db.search_products(message, limit=10, food_category=food_cat)
 
         if not products:
             return ""
