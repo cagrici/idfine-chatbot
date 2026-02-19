@@ -261,11 +261,14 @@ class JsonRpcAdapter(OdooAdapter):
 
         order_id = await self.call("sale.order", "create", [vals])
 
+        # Odoo create() returns an int; wrap in list for read()
+        order_id_int = order_id if isinstance(order_id, int) else order_id[0]
+
         # Read back the created order
         order_data = await self.call(
             "sale.order",
             "read",
-            [order_id],
+            [[order_id_int]],
             {"fields": ["name", "amount_total", "state"]},
         )
 

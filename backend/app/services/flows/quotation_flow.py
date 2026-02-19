@@ -119,7 +119,7 @@ class QuotationFlowHandler(FlowHandler):
                 data={"order_id": result.order_id, "order_ref": result.order_ref},
             )
         except Exception as e:
-            logger.error("Quotation creation error: %s", e)
+            logger.error("Quotation creation error (partner_id=%s): %s", session.partner_id, e, exc_info=True)
             return FlowStepResult(
                 message="Teklif talebi olusturulurken bir hata olustu. Lutfen daha sonra tekrar deneyin.",
                 flow_cancelled=True,
