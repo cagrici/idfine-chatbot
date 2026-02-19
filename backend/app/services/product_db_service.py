@@ -30,7 +30,7 @@ class ProductDBService:
             Product.marka, Product.model, Product.ana_renk, Product.materyal,
             Product.servis_tipi, Product.mutfak_uyumu, Product.yemek_onerileri,
             Product.konsept_etiketler, Product.urun_kodu, Product.dekor,
-            Product.stil,
+            Product.stil, Product.menu_ana_baslik,
         ]
         parts = []
         for v in variants:
