@@ -13,6 +13,102 @@ logger = logging.getLogger(__name__)
 
 # ASCII ↔ Turkish character mapping for normalization
 _TR_TO_ASCII = str.maketrans("çğıöşüÇĞİÖŞÜ", "cgiosuCGIOSU")
+
+# Food keyword → menu_ana_baslik category mapping.
+# Keys are regex patterns matched against the raw user query (case-insensitive).
+# Values are substrings of menu_ana_baslik to filter on.
+_FOOD_CATEGORY_PATTERNS: list[tuple[re.Pattern, str]] = [
+    # Çorbalar
+    (re.compile(
+        r'\bçorba\b|\bcorba\b|mercimek|tarhana|ezogelin|yayla\s*çorba|domates\s*çorba'
+        r'|işkembe|iskembe|kremalı\s*çorba|kremali\s*corba|sebze\s*çorba'
+        r'|tavuk\s*suyu|mantar\s*çorba|soğan\s*çorba',
+        re.IGNORECASE,
+    ), "Çorbalar"),
+
+    # Tatlılar
+    (re.compile(
+        r'\btatlı\b|\btatli\b|kazandibi|sütlaç|sutlac|dondurma|baklava|muhallebi'
+        r'|profiterol|tiramisu|cheesecake|sufle|künefe|kunefe|revani|irmik\s*tatlı'
+        r'|panna.?cotta|brownie|mousse|crème.?brûlée|creme.?brulee|waffle|krep\b|crepe'
+        r'|pasta\s+dilimi|tart\b|eclair|opera\s+pasta',
+        re.IGNORECASE,
+    ), "Tatlılar"),
+
+    # Et Yemekleri
+    (re.compile(
+        r'\bet\s+yemeğ|\bet\s+yemeg|köfte|kofte|döner|doner|kuzu\s+(?!çorba)'
+        r'|biftek|rosto|kebap|kebab|ızgara\s+et|izgara\s+et|steak|schnitzel'
+        r'|kavurma|haşlama|hashlama|pirzola|bonfile|antrikot|şiş\s+kebap|sis\s+kebap'
+        r'|patlıcan\s+kebap|adana\s+kebap|urfa\s+kebap',
+        re.IGNORECASE,
+    ), "Et Yemekleri"),
+
+    # Balık & Deniz Ürünleri
+    (re.compile(
+        r'\bbalık\b|\bbalik\b|levrek|çipura|cipura|somon|salmon|karides|ahtapot'
+        r'|midye|istakoz|ıstakoz|istakoz|kalamar|çupra|lüfer|lufer|hamsi|alabalık'
+        r'|deniz\s+ürün|deniz\s+mahsul',
+        re.IGNORECASE,
+    ), "Balık & Deniz Ürünleri"),
+
+    # Tavuk Yemekleri
+    (re.compile(
+        r'\btavuk\b|piliç|pilic|chicken|hindi\s+(?!kahve)',
+        re.IGNORECASE,
+    ), "Tavuk Yemekleri"),
+
+    # Pizza & Hamur İşleri
+    (re.compile(
+        r'\bpizza\b|\bpide\b|\bbörek\b|\bborek\b|lahmacun|poğaça|pogaca'
+        r'|gözleme|gozleme|katmer|mantı\b|manti\b',
+        re.IGNORECASE,
+    ), "Pizza & Hamur İşleri"),
+
+    # Kahvaltı & Brunch
+    (re.compile(
+        r'kahvaltı|kahvalti|\bbrunch\b|omlet|sahanda\s+yumurta|menemen',
+        re.IGNORECASE,
+    ), "Kahvaltı & Brunch"),
+
+    # Başlangıçlar / Mezeler
+    (re.compile(
+        r'\bmeze\b|\bstarter\b|soğuk\s+başlangıç|sicak\s+baslangic'
+        r'|sıcak\s+başlangıç|soğuk\s+meze|sıcak\s+meze',
+        re.IGNORECASE,
+    ), "Başlangıçlar"),
+
+    # Salatalar
+    (re.compile(
+        r'\bsalata\b|\bsalad\b|sezar\s+salata|akdeniz\s+salata|coleslaw',
+        re.IGNORECASE,
+    ), "Salatalar"),
+
+    # Bowl
+    (re.compile(
+        r'\bbowl\b|poke\s+bowl|buddha\s+bowl|grain\s+bowl',
+        re.IGNORECASE,
+    ), "Bowl"),
+
+    # Makarna
+    (re.compile(
+        r'\bmakarna\b|spagetti|spaghetti|lazanya|lasagna|fettuccine|penne\b'
+        r'|linguine|tagliatelle|rigatoni|carbonara|bolonez|bolognese',
+        re.IGNORECASE,
+    ), "Makarna"),
+
+    # Noodle
+    (re.compile(
+        r'\bnoodle\b|\bramen\b|\bpho\b|\budon\b|\bsoba\b|\bpad\s+thai\b',
+        re.IGNORECASE,
+    ), "Noodle"),
+
+    # Pilav & Risotto
+    (re.compile(
+        r'\bpilav\b|\brisotto\b|\bpirinç\b|\bpirincbir\b',
+        re.IGNORECASE,
+    ), "Pilav"),
+]
 _ASCII_TO_TR = {"c": "ç", "g": "ğ", "i": "ı", "o": "ö", "s": "ş", "u": "ü"}
 
 
@@ -41,8 +137,21 @@ class ProductDBService:
 
     _STOCK_QUERY_RE = re.compile(r'\bstokta\b|\bstoklu\b|\bmevcut\b', re.IGNORECASE)
 
+    @staticmethod
+    def _detect_food_category(query: str) -> str | None:
+        """Return a menu_ana_baslik category name if the query references a known food type."""
+        for pattern, category in _FOOD_CATEGORY_PATTERNS:
+            if pattern.search(query):
+                return category
+        return None
+
     async def search_products(self, query: str, limit: int = 10) -> list[dict]:
-        """Search products by keyword matching. Tries AND first, falls back to OR."""
+        """Search products by keyword matching. Tries AND first, falls back to OR.
+
+        If the query mentions a known food/dish type, prioritises products whose
+        menu_ana_baslik contains the matching menu category (e.g. "kazandibi" →
+        search menu_ana_baslik ILIKE '%Tatlılar%').
+        """
         keywords = self._extract_keywords(query)
         if not keywords:
             return []
@@ -50,18 +159,38 @@ class ProductDBService:
         # Detect "stokta olan" type queries → filter stok > 0 and order by stok
         stock_only = bool(self._STOCK_QUERY_RE.search(query))
 
-        kw_conditions = [self._keyword_condition(kw) for kw in keywords]
         base_filters = [Product.aktif == True]
         if stock_only:
             base_filters.append(Product.stok > 0)
 
-        order = (Product.stok.desc(), Product.fiyat.desc().nullslast()) if stock_only else (Product.fiyat.desc().nullslast(),)
+        food_order = (Product.stok.desc().nullslast(), Product.fiyat.desc().nullslast())
+        price_order = (Product.stok.desc(), Product.fiyat.desc().nullslast()) if stock_only else (Product.fiyat.desc().nullslast(),)
+
+        # ── Food-category shortcut ──────────────────────────────────────────
+        # If the query mentions a known food/dish (e.g. "kazandibi", "çorba"),
+        # search menu_ana_baslik directly for the matching category first.
+        food_cat = self._detect_food_category(query)
+        if food_cat:
+            stmt = (
+                select(Product)
+                .where(and_(*base_filters, Product.menu_ana_baslik.ilike(f"%{food_cat}%")))
+                .order_by(*food_order)
+                .limit(limit)
+            )
+            result = await self.db.execute(stmt)
+            products = result.scalars().all()
+            if products:
+                return [self._product_to_dict(p) for p in products]
+            # No results for category → fall through to keyword search
+
+        # ── Keyword search ──────────────────────────────────────────────────
+        kw_conditions = [self._keyword_condition(kw) for kw in keywords]
 
         # Try AND first (all keywords must match)
         stmt = (
             select(Product)
             .where(and_(*base_filters, *kw_conditions))
-            .order_by(*order)
+            .order_by(*price_order)
             .limit(limit)
         )
         result = await self.db.execute(stmt)
@@ -70,11 +199,10 @@ class ProductDBService:
         # Fallback to OR if AND returns nothing
         # OR results are less precise, so prioritise in-stock items first
         if not products and len(keywords) > 1:
-            or_order = (Product.stok.desc().nullslast(), Product.fiyat.desc().nullslast())
             stmt = (
                 select(Product)
                 .where(and_(*base_filters, or_(*kw_conditions)))
-                .order_by(*or_order)
+                .order_by(*food_order)
                 .limit(limit)
             )
             result = await self.db.execute(stmt)
