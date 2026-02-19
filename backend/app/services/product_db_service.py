@@ -68,11 +68,13 @@ class ProductDBService:
         products = result.scalars().all()
 
         # Fallback to OR if AND returns nothing
+        # OR results are less precise, so prioritise in-stock items first
         if not products and len(keywords) > 1:
+            or_order = (Product.stok.desc().nullslast(), Product.fiyat.desc().nullslast())
             stmt = (
                 select(Product)
                 .where(and_(*base_filters, or_(*kw_conditions)))
-                .order_by(*order)
+                .order_by(*or_order)
                 .limit(limit)
             )
             result = await self.db.execute(stmt)
@@ -304,6 +306,14 @@ class ProductDBService:
             "çeşitleri", "cesitleri", "çeşit", "cesit", "cesitleriniz",
             "ürünleriniz", "urunleriniz", "stok", "stokta", "stoğu", "stogu",
             "durumu", "bedeli", "tutarı", "tutari",
+            "olan", "olarak", "olan", "bulunan", "mevcut",
+            # Generic tableware declensions — keep base forms (tabak/kase) as keywords
+            # e.g. "makarna tabağı" → only "makarna" remains as keyword
+            "tabağı", "tabağın", "tabağını", "tabağında", "tabağıyla",
+            "kasesi", "kaseyi", "kasenin",
+            "bardağı", "bardağın", "bardağını",
+            "fincanı", "fincanın",
+            "kupası", "kupanın",
             # English common
             "the", "a", "an", "is", "are", "what", "which", "how", "can",
             "do", "you", "have", "show", "me", "please", "recommend",
