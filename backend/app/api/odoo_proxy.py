@@ -26,7 +26,7 @@ async def get_odoo_service(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> OdooService:
     if not settings.odoo_url:
-        raise OdooConnectionError("Odoo bağlantısı yapılandırılmamış")
+        raise OdooConnectionError("ERP sistemi bağlantısı yapılandırılmamış")
     adapter = create_odoo_adapter()
     cache = CacheService(redis_client)
     return OdooService(adapter, cache)

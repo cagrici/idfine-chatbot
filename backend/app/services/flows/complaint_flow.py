@@ -183,7 +183,7 @@ class ComplaintFlowHandler(FlowHandler):
                 logger.error("Failed to create complaint ticket in Odoo: %s", e)
 
         if ticket_id:
-            ticket_info = f"<p><strong>Odoo Talep No:</strong> #{ticket_id}</p>"
+            ticket_info = f"<p><strong>Talep No:</strong> #{ticket_id}</p>"
 
         # Send email via SMTP
         body_html = (

@@ -31,7 +31,7 @@ class RateLimitError(HTTPException):
 
 
 class OdooConnectionError(HTTPException):
-    def __init__(self, detail: str = "Odoo ERP bağlantısı kurulamadı"):
+    def __init__(self, detail: str = "ERP sistemi bağlantısı kurulamadı"):
         super().__init__(
             status_code=status.HTTP_502_BAD_GATEWAY, detail=detail
         )

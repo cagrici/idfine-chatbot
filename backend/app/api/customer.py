@@ -59,7 +59,7 @@ async def create_invoice_download_token(
         raise HTTPException(status_code=401, detail="Oturum bulunamadi. Lutfen giris yapin.")
 
     if not odoo_service:
-        raise HTTPException(status_code=503, detail="Odoo baglantisi yapilamiyor.")
+        raise HTTPException(status_code=503, detail="ERP sistemi baglantisi yapilamiyor.")
 
     # Verify invoice belongs to this customer
     invoices = await odoo_service.get_partner_invoices(session.partner_id, limit=100)
@@ -108,7 +108,7 @@ async def download_invoice_pdf(
     # Create Odoo service and fetch PDF
     cache = CacheService(redis_client)
     if not settings.odoo_url:
-        raise HTTPException(status_code=503, detail="Odoo baglantisi yapilamiyor.")
+        raise HTTPException(status_code=503, detail="ERP sistemi baglantisi yapilamiyor.")
 
     adapter = create_odoo_adapter()
     odoo_service = OdooService(adapter, cache)
