@@ -771,7 +771,11 @@ class ChatService:
             elif intent == Intent.SPENDING_REPORT:
                 return await self._format_spending_report(partner_id)
             else:
-                return f"<musteri_bilgisi>Musteri dogrulandi (partner_id={partner_id}). Talep: {intent.value}</musteri_bilgisi>"
+                # Flow-based intents (ORDER_CREATE, QUOTE_REQUEST, etc.) should never reach here
+                # because _maybe_start_flow() is always called before _handle_customer_intent().
+                # Returning empty string prevents LLM from generating a fake response.
+                logger.warning("_handle_customer_intent called for flow intent %s — returning empty", intent)
+                return ""
         except Exception as e:
             logger.error("Customer intent error (%s): %s", intent, e)
             return "<musteri_bilgisi>Musteri verileri alinirken bir hata olustu.</musteri_bilgisi>"
