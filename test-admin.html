@@ -1374,36 +1374,38 @@
 
             el.innerHTML = `
                 <div id="prodAlert"></div>
-                <div class="toolbar">
-                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                        <input type="text" class="search-box" id="prodSearch"
-                            placeholder="Ürün kodu, tanım veya marka ara..."
-                            oninput="debounceProdSearch()">
-                        <div class="filters">
-                            <select id="prodMarkaFilter" onchange="prodCurrentPage=0;loadProducts()">
-                                <option value="">Tüm Markalar</option>
-                                ${prodFilters.markalar.map(m => `<option value="${escHtml(m)}">${escHtml(m)}</option>`).join('')}
-                            </select>
-                            <select id="prodTipFilter" onchange="prodCurrentPage=0;loadProducts()">
-                                <option value="">Tüm Tipler</option>
-                                ${prodFilters.urun_tipleri.map(t => `<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('')}
-                            </select>
-                            <select id="prodAktifFilter" onchange="prodCurrentPage=0;loadProducts()">
-                                <option value="">Tüm Durumlar</option>
-                                <option value="true">Aktif</option>
-                                <option value="false">Pasif</option>
-                            </select>
+                <div class="toolbar" style="flex-direction:column;align-items:stretch">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1">
+                            <input type="text" class="search-box" id="prodSearch"
+                                placeholder="Ürün kodu, tanım veya marka ara..."
+                                oninput="debounceProdSearch()">
+                            <div class="filters">
+                                <select id="prodMarkaFilter" onchange="prodCurrentPage=0;loadProducts()">
+                                    <option value="">Tüm Markalar</option>
+                                    ${prodFilters.markalar.map(m => `<option value="${escHtml(m)}">${escHtml(m)}</option>`).join('')}
+                                </select>
+                                <select id="prodTipFilter" onchange="prodCurrentPage=0;loadProducts()">
+                                    <option value="">Tüm Tipler</option>
+                                    ${prodFilters.urun_tipleri.map(t => `<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('')}
+                                </select>
+                                <select id="prodAktifFilter" onchange="prodCurrentPage=0;loadProducts()">
+                                    <option value="">Tüm Durumlar</option>
+                                    <option value="true">Aktif</option>
+                                    <option value="false">Pasif</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    <div style="display:flex;gap:8px;align-items:center">
-                        <button class="btn" style="background:#10b981;color:#fff" onclick="downloadProductTemplate()">Şablon İndir</button>
-                        ${hasPerm('documents.upload') ? `
-                            <label class="btn" style="background:#6366f1;color:#fff;cursor:pointer;margin:0">
-                                Excel Yükle
-                                <input type="file" accept=".xlsx" style="display:none" onchange="uploadProductExcel(this)">
-                            </label>
-                            <button class="btn btn-primary" onclick="showCreateProductModal()">+ Yeni Ürün</button>
-                        ` : ''}
+                        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+                            <button class="btn" style="background:#10b981;color:#fff" onclick="downloadProductTemplate()">Şablon İndir</button>
+                            ${hasPerm('documents.upload') ? `
+                                <label class="btn" style="background:#6366f1;color:#fff;cursor:pointer;margin:0">
+                                    Excel Yükle
+                                    <input type="file" accept=".xlsx" style="display:none" onchange="uploadProductExcel(this)">
+                                </label>
+                                <button class="btn btn-primary" onclick="showCreateProductModal()">+ Yeni Ürün</button>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
                 <table class="doc-table" id="productsTable">
@@ -1546,12 +1548,33 @@
             const pages = Math.ceil(total / PROD_PAGE_SIZE);
             const pagEl = document.getElementById('prodPagination');
             if (pages <= 1) { pagEl.innerHTML = ''; return; }
-            let html = '';
-            for (let i = 0; i < pages; i++) {
-                html += `<button class="btn btn-sm ${i === prodCurrentPage ? 'btn-primary' : 'btn-outline'}"
-                    onclick="prodCurrentPage=${i};loadProducts()" style="min-width:32px">${i + 1}</button>`;
+
+            // Smart pagination: show first, last, and ±2 around current page
+            const cur = prodCurrentPage;
+            const pageBtn = (i) => `<button class="btn btn-sm ${i === cur ? 'btn-primary' : 'btn-outline'}"
+                onclick="prodCurrentPage=${i};loadProducts()" style="min-width:36px">${i + 1}</button>`;
+            const ellipsis = '<span style="padding:0 4px;color:#a0aec0">...</span>';
+            const navBtn = (label, i, disabled) => `<button class="btn btn-sm btn-outline" style="min-width:36px"
+                onclick="prodCurrentPage=${i};loadProducts()" ${disabled ? 'disabled' : ''}>${label}</button>`;
+
+            let parts = [];
+            parts.push(navBtn('\u2039', Math.max(0, cur - 1), cur === 0));
+
+            if (pages <= 9) {
+                for (let i = 0; i < pages; i++) parts.push(pageBtn(i));
+            } else {
+                parts.push(pageBtn(0));
+                const start = Math.max(1, cur - 2);
+                const end = Math.min(pages - 2, cur + 2);
+                if (start > 1) parts.push(ellipsis);
+                for (let i = start; i <= end; i++) parts.push(pageBtn(i));
+                if (end < pages - 2) parts.push(ellipsis);
+                parts.push(pageBtn(pages - 1));
             }
-            pagEl.innerHTML = html;
+
+            parts.push(navBtn('\u203a', Math.min(pages - 1, cur + 1), cur === pages - 1));
+            parts.push(`<span style="margin-left:8px;color:#a0aec0;font-size:12px">${total.toLocaleString('tr-TR')} \u00fcr\u00fcn</span>`);
+            pagEl.innerHTML = parts.join('');
         }
 
         // Product field definitions for forms
@@ -1576,6 +1599,7 @@
             { key: 'kullanim_alani', label: 'Kullanım Alanı' },
             { key: 'servis_tipi', label: 'Servis Tipi' },
             { key: 'mutfak_uyumu', label: 'Mutfak Uyumu' },
+            { key: 'menu_ana_baslik', label: 'Menü Ana Başlık' },
             { key: 'yemek_onerileri', label: 'Yemek Önerileri', type: 'textarea' },
             { key: 'konsept_etiketler', label: 'Konsept Etiketler', type: 'textarea' },
             { key: 'rekabet_avantaji', label: 'Rekabet Avantajı', type: 'textarea' },
