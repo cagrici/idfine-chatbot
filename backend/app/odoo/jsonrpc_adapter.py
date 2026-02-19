@@ -5,7 +5,10 @@ from typing import Any, Optional
 
 import httpx
 
+from app.config import get_settings
 from app.odoo.base_adapter import OdooAdapter
+
+settings = get_settings()
 from app.schemas.odoo import (
     DeliveryDetail,
     DeliveryLineDetail,
@@ -251,8 +254,19 @@ class JsonRpcAdapter(OdooAdapter):
                 })
             )
 
+        # Resolve warehouse_id (mandatory in Odoo 17+)
+        warehouse_id = settings.odoo_warehouse_id
+        if not warehouse_id:
+            warehouses = await self.call(
+                "stock.warehouse", "search_read",
+                [[["active", "=", True]]],
+                {"fields": ["id"], "limit": 1, "order": "id asc"},
+            )
+            warehouse_id = warehouses[0]["id"] if warehouses else 1
+
         vals = {
             "partner_id": partner_id,
+            "warehouse_id": warehouse_id,
         }
         if order_lines:
             vals["order_line"] = order_lines
