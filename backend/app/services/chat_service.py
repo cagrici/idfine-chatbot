@@ -261,8 +261,8 @@ class ChatService:
         # Feature toggle check for non-auth intents
         perms = await self._load_source_group_permissions(source_group_id)
 
-        # Price/stock inquiry gate for guest users
-        if intent in (Intent.PRICE_INQUIRY, Intent.STOCK_CHECK):
+        # Price inquiry gate for guest users (stock queries are allowed with Var/Yok only)
+        if intent == Intent.PRICE_INQUIRY:
             has_session = False
             if self.customer_session and visitor_id:
                 session = await self.customer_session.get_session(visitor_id)
@@ -459,8 +459,8 @@ class ChatService:
         # Feature toggle check (loaded once for streaming path)
         perms = await self._load_source_group_permissions(source_group_id)
 
-        # --- Step 4.4: Price/stock inquiry gate for guest users ---
-        if intent in (Intent.PRICE_INQUIRY, Intent.STOCK_CHECK):
+        # --- Step 4.4: Price inquiry gate for guest users (stock allowed with Var/Yok only) ---
+        if intent == Intent.PRICE_INQUIRY:
             has_session = False
             if self.customer_session and visitor_id:
                 session = await self.customer_session.get_session(visitor_id)
@@ -966,16 +966,20 @@ class ChatService:
             Intent.PRICE_INQUIRY, Intent.STOCK_CHECK,
             Intent.PRODUCT_INFO, Intent.HYBRID,
         ) and perms.get("product_db_enabled", True):
-            # Check for customer-specific pricelist
+            # Check for customer-specific pricelist and session (for guest_mode)
             pricelist_info = None
+            has_session = False
             if self.customer_session and visitor_id:
                 session = await self.customer_session.get_session(visitor_id)
-                if session and session.pricelist_id:
-                    pricelist_info = {
-                        "pricelist_name": session.pricelist_name,
-                        "discount_percent": session.discount_percent,
-                    }
-            tasks.append(("product_db", self._get_product_context(user_message, intent, pricelist_info)))
+                if session:
+                    has_session = True
+                    if session.pricelist_id:
+                        pricelist_info = {
+                            "pricelist_name": session.pricelist_name,
+                            "discount_percent": session.discount_percent,
+                        }
+            guest_mode = (intent == Intent.STOCK_CHECK and not has_session)
+            tasks.append(("product_db", self._get_product_context(user_message, intent, pricelist_info, guest_mode)))
 
         if tasks:
             results = await asyncio.gather(
@@ -998,7 +1002,7 @@ class ChatService:
         sources = self.rag.get_sources(chunks, max_chunks=5)
         return context, sources
 
-    async def _get_product_context(self, message: str, intent: Intent, pricelist_info: dict | None = None) -> str:
+    async def _get_product_context(self, message: str, intent: Intent, pricelist_info: dict | None = None, guest_mode: bool = False) -> str:
         """Query product database and format as context text."""
         products = []
 
@@ -1012,7 +1016,7 @@ class ChatService:
         if not products:
             return ""
 
-        return self.product_db.format_products_context(products, pricelist_info)
+        return self.product_db.format_products_context(products, pricelist_info, guest_mode=guest_mode)
 
     def _extract_order_ref(self, message: str) -> str | None:
         patterns = [

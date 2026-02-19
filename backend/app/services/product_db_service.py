@@ -159,11 +159,12 @@ class ProductDBService:
         result = await self.db.execute(stmt)
         return [self._product_to_dict(p) for p in result.scalars().all()]
 
-    def format_products_context(self, products: list[dict], pricelist_info: dict | None = None) -> str:
+    def format_products_context(self, products: list[dict], pricelist_info: dict | None = None, guest_mode: bool = False) -> str:
         """Format product list into text context for LLM.
 
         If pricelist_info is provided (authenticated customer), applies their
         discount to the base price.
+        If guest_mode is True, stock quantity is hidden (only Var/Yok shown).
         """
         if not products:
             return ""
@@ -202,7 +203,9 @@ class ProductDBService:
                     parts.append(f"  Fiyat: {p['fiyat']} {currency}")
             if p.get('stok') is not None:
                 stok_val = p['stok']
-                if stok_val > 0:
+                if guest_mode:
+                    parts.append("  Stok: " + ("Var" if stok_val > 0 else "Yok"))
+                elif stok_val > 0:
                     parts.append(f"  Stok: {stok_val} adet")
                 else:
                     parts.append("  Stok: Tükendi")
