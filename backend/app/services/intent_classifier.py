@@ -103,8 +103,9 @@ _PRICE_KEYWORDS = re.compile(
     re.IGNORECASE,
 )
 _STOCK_KEYWORDS = re.compile(
-    r"\b(stok|stokta|mevcut|var\s*m[iı]|kalm[iı][sş]\s*m[iı]|bulunur|temin|teslimat\s*s[uü]resi"
-    r"|stock|availability|available|in\s*stock)\b",
+    r"\b(stokta|mevcut|var\s*m[iı]|kalm[iı][sş]\s*m[iı]|bulunur|temin|teslimat\s*s[uü]resi"
+    r"|stock|availability|available|in\s*stock)\b"
+    r"|\bstok(?!\s*kod)",  # "stok" matches only if NOT followed by "kod" (stok kodu = product code → PRODUCT_INFO)
     re.IGNORECASE,
 )
 _ORDER_KEYWORDS = re.compile(
@@ -117,7 +118,9 @@ _QUOTE_KEYWORDS = re.compile(
 )
 _PRODUCT_KEYWORDS = re.compile(
     r"\b([uü]r[uü]n|tabak|bardak|fincan|kase|porselen|bone\s*china|servis|koleksiyon"
-    r"|[cç]e[sş]it|boyut|[oö]zellik|malzeme|seri|plate|cup|bowl|porcelain|collection)\b",
+    r"|[cç]e[sş]it|boyut|[oö]zellik|malzeme|seri|plate|cup|bowl|porcelain|collection"
+    r"|stok\s*kod|[uü]r[uü]n\s*kod|referans\s*(no|kodu?)|sku)\b"
+    r"|\b\d{4,}-\d{4,}\b",  # product code patterns like 20257-111030
     re.IGNORECASE,
 )
 
