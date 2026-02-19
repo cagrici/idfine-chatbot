@@ -253,8 +253,9 @@ class JsonRpcAdapter(OdooAdapter):
 
         vals = {
             "partner_id": partner_id,
-            "order_line": order_lines,
         }
+        if order_lines:
+            vals["order_line"] = order_lines
         if notes:
             vals["note"] = notes
 
