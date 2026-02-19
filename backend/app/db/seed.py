@@ -198,6 +198,23 @@ async def backfill_role_ids():
             print("  No users need role_id backfill")
 
 
+_ALL_CHATBOT_FEATURES = {
+    "order_view": True,
+    "order_create": True,
+    "order_cancel": True,
+    "invoice_view": True,
+    "invoice_download": True,
+    "payment_view": True,
+    "delivery_tracking": True,
+    "profile_view": True,
+    "profile_update": True,
+    "support_ticket": True,
+    "complaint": True,
+    "spending_report": True,
+    "catalog_request": True,
+    "find_dealer": True,
+}
+
 SOURCE_GROUP_DEFINITIONS = {
     "public": {
         "name": "Genel (Müşteri)",
@@ -209,6 +226,12 @@ SOURCE_GROUP_DEFINITIONS = {
             "product_db_enabled": True,
             "odoo_enabled": True,
             "odoo_scopes": ["orders", "deliveries", "tickets"],
+            "chatbot_features": {
+                **_ALL_CHATBOT_FEATURES,
+                # Public: disable financial and management features
+                "invoice_download": False,
+                "spending_report": False,
+            },
         },
     },
     "internal": {
@@ -221,6 +244,7 @@ SOURCE_GROUP_DEFINITIONS = {
             "product_db_enabled": True,
             "odoo_enabled": True,
             "odoo_scopes": ["orders", "invoices", "deliveries", "tickets", "partners"],
+            "chatbot_features": {**_ALL_CHATBOT_FEATURES},
         },
     },
     "management": {
@@ -236,6 +260,7 @@ SOURCE_GROUP_DEFINITIONS = {
                 "orders", "invoices", "deliveries", "tickets",
                 "partners", "financials", "reports",
             ],
+            "chatbot_features": {**_ALL_CHATBOT_FEATURES},
         },
     },
 }

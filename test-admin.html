@@ -798,6 +798,7 @@
                 <a onclick="showPage('canned-responses')" data-page="canned-responses">Hazir Yanitlar</a>
                 <a onclick="showPage('reports')" data-page="reports">Raporlar</a>
                 <a onclick="showPage('widget')" data-page="widget">Widget Kodu</a>
+                <a onclick="showPage('chatbot-settings')" data-page="chatbot-settings">Chatbot Ayarlari</a>
                 <div style="border-top:1px solid rgba(255,255,255,0.1);margin:8px 0"></div>
                 <a style="font-size:11px;color:rgba(255,255,255,0.4);padding:4px 20px;cursor:default;text-transform:uppercase;letter-spacing:0.5px">Sosyal Medya</a>
                 <a onclick="showPage('social-dashboard')" data-page="social-dashboard">SM Dashboard</a>
@@ -1027,6 +1028,7 @@
                 'social-dashboard': 'Sosyal Medya Dashboard',
                 'social-channels': 'Kanal Ayarlari',
                 'social-templates': 'Mesaj Sablonlari',
+                'chatbot-settings': 'Chatbot Ayarlari',
             }[page];
 
             const content = document.getElementById('pageContent');
@@ -1043,6 +1045,7 @@
             else if (page === 'social-dashboard') await renderSocialDashboard(content);
             else if (page === 'social-channels') await renderSocialChannels(content);
             else if (page === 'social-templates') await renderSocialTemplates(content);
+            else if (page === 'chatbot-settings') await renderChatbotSettings(content);
             else if (page === 'profile') await renderProfile(content);
         }
 
@@ -4803,6 +4806,280 @@
             });
             smCharts.push(chart);
             return chart;
+        }
+
+        // ── Chatbot Settings ─────────────────────────────────────
+
+        const CHATBOT_FEATURE_SCHEMA = [
+            {
+                category: 'Ana Anahtarlar',
+                icon: '⚙️',
+                description: 'Temel sistem bileşenleri',
+                features: [
+                    { key: '_rag_enabled', field: 'rag_enabled', label: 'Doküman Arama (RAG)', desc: 'Yapay zeka ile doküman tabanlı soru-cevap' },
+                    { key: '_product_db_enabled', field: 'product_db_enabled', label: 'Ürün Veritabanı', desc: 'Ürün, fiyat ve stok sorguları' },
+                    { key: '_odoo_enabled', field: 'odoo_enabled', label: 'ERP Entegrasyonu (Master)', desc: 'Tüm ERP bağlantılı özelliklerin ana anahtarı' },
+                ],
+            },
+            {
+                category: 'Sipariş Yönetimi',
+                icon: '📦',
+                description: 'Sipariş görüntüleme, oluşturma ve iptal işlemleri',
+                features: [
+                    { key: 'order_view', label: 'Sipariş Görüntüleme', desc: 'Sipariş geçmişi ve detaylarını görme' },
+                    { key: 'order_create', label: 'Sipariş / Teklif Oluşturma', desc: 'Yeni sipariş talebi ve teklif oluşturma' },
+                    { key: 'order_cancel', label: 'Sipariş İptal', desc: 'Mevcut siparişler için iptal talebi' },
+                ],
+            },
+            {
+                category: 'Fatura ve Ödeme',
+                icon: '💳',
+                description: 'Fatura listeleme, indirme ve ödeme durumu',
+                features: [
+                    { key: 'invoice_view', label: 'Fatura Görüntüleme', desc: 'Fatura listesi ve detayları' },
+                    { key: 'invoice_download', label: 'Fatura İndirme (PDF)', desc: 'Fatura PDF dosyası indirme' },
+                    { key: 'payment_view', label: 'Ödeme Bilgileri', desc: 'Ödeme durumu ve geçmişi' },
+                ],
+            },
+            {
+                category: 'Teslimat',
+                icon: '🚚',
+                description: 'Kargo ve teslimat takibi',
+                features: [
+                    { key: 'delivery_tracking', label: 'Teslimat Takibi', desc: 'Kargo ve sevkiyat durumu sorgulama' },
+                ],
+            },
+            {
+                category: 'Müşteri Profili',
+                icon: '👤',
+                description: 'Profil görüntüleme ve bilgi güncelleme',
+                features: [
+                    { key: 'profile_view', label: 'Profil Görüntüleme', desc: 'Müşteri bilgilerini görme' },
+                    { key: 'profile_update', label: 'Profil Güncelleme', desc: 'Adres, telefon, e-posta güncelleme' },
+                ],
+            },
+            {
+                category: 'Destek ve Şikâyet',
+                icon: '🎧',
+                description: 'Destek talebi oluşturma ve şikâyet bildirimi',
+                features: [
+                    { key: 'support_ticket', label: 'Destek Talebi', desc: 'Yeni destek talebi oluşturma ve listeleme' },
+                    { key: 'complaint', label: 'Şikâyet Bildirimi', desc: 'Şikâyet formu ve e-posta bildirimi' },
+                ],
+            },
+            {
+                category: 'Raporlama ve Diğer',
+                icon: '📊',
+                description: 'Harcama raporu, katalog ve bayi bulma',
+                features: [
+                    { key: 'spending_report', label: 'Harcama Raporu', desc: 'Sipariş ve fatura bazlı harcama özeti' },
+                    { key: 'catalog_request', label: 'Katalog Talebi', desc: 'Ürün kataloğu bilgisi' },
+                    { key: 'find_dealer', label: 'Bayi Bul', desc: 'En yakın bayi/mağaza bulma' },
+                ],
+            },
+        ];
+
+        let cbSettingsState = { groups: [], selectedGroupId: null, features: {}, dirty: false, saving: false };
+
+        async function renderChatbotSettings(el) {
+            // Load source groups
+            try {
+                const resp = await fetch(`${API}/api/admin/source-groups`, { headers: authHeaders() });
+                const data = await resp.json();
+                cbSettingsState.groups = data.groups || [];
+            } catch (e) {
+                el.innerHTML = '<div class="alert alert-error">Kaynak grupları yüklenemedi.</div>';
+                return;
+            }
+
+            // Auto-select first group
+            if (!cbSettingsState.selectedGroupId && cbSettingsState.groups.length) {
+                cbSettingsState.selectedGroupId = cbSettingsState.groups[0].id;
+            }
+
+            el.innerHTML = `
+                <div style="max-width:900px;margin:0 auto">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <label style="font-weight:500;font-size:14px;color:#4a5568">Kaynak Grubu:</label>
+                            <select id="cbGroupSelect" onchange="cbSelectGroup(this.value)"
+                                style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;min-width:220px;background:#fff">
+                                ${cbSettingsState.groups.map(g => `<option value="${g.id}" ${g.id === cbSettingsState.selectedGroupId ? 'selected' : ''}>${g.name} (${g.slug})</option>`).join('')}
+                            </select>
+                        </div>
+                        <button id="cbSaveBtn" class="btn btn-primary" onclick="cbSaveSettings()" disabled
+                            style="min-width:120px">Kaydet</button>
+                    </div>
+                    <div id="cbFeaturesContainer"></div>
+                </div>
+            `;
+
+            cbLoadGroupFeatures();
+        }
+
+        function cbSelectGroup(groupId) {
+            cbSettingsState.selectedGroupId = groupId;
+            cbSettingsState.dirty = false;
+            cbLoadGroupFeatures();
+        }
+
+        function cbLoadGroupFeatures() {
+            const group = cbSettingsState.groups.find(g => g.id === cbSettingsState.selectedGroupId);
+            if (!group) return;
+
+            const perms = group.data_permissions || {};
+            const chatFeatures = perms.chatbot_features || {};
+
+            // Build combined state: top-level booleans + chatbot_features
+            cbSettingsState.features = {};
+            // Top-level toggles
+            cbSettingsState.features['_rag_enabled'] = perms.rag_enabled !== false;
+            cbSettingsState.features['_product_db_enabled'] = perms.product_db_enabled !== false;
+            cbSettingsState.features['_odoo_enabled'] = perms.odoo_enabled !== false;
+            // Chatbot features
+            CHATBOT_FEATURE_SCHEMA.forEach(cat => {
+                cat.features.forEach(f => {
+                    if (!f.key.startsWith('_')) {
+                        cbSettingsState.features[f.key] = chatFeatures[f.key] !== false;
+                    }
+                });
+            });
+
+            cbRenderFeatures();
+        }
+
+        function cbRenderFeatures() {
+            const container = document.getElementById('cbFeaturesContainer');
+            if (!container) return;
+
+            const masterEnabled = cbSettingsState.features['_odoo_enabled'];
+
+            let html = '';
+            CHATBOT_FEATURE_SCHEMA.forEach((cat, ci) => {
+                const isMainCategory = ci === 0;
+                html += `
+                    <div style="background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:16px;border:1px solid #e2e8f0${!isMainCategory && !masterEnabled ? ';opacity:0.5;pointer-events:none' : ''}">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+                            <span style="font-size:20px">${cat.icon}</span>
+                            <div>
+                                <div style="font-weight:600;font-size:15px;color:#1a202c">${cat.category}</div>
+                                <div style="font-size:12px;color:#a0aec0">${cat.description}</div>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+                `;
+
+                cat.features.forEach(f => {
+                    const checked = cbSettingsState.features[f.key];
+                    const isErpMaster = f.key === '_odoo_enabled';
+                    html += `
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f7fafc;border-radius:8px;border:1px solid ${checked ? '#c6f6d5' : '#fed7d7'}">
+                            <div style="flex:1;min-width:0">
+                                <div style="font-weight:500;font-size:13px;color:#2d3748">${f.label}</div>
+                                <div style="font-size:11px;color:#a0aec0;margin-top:2px">${f.desc}</div>
+                            </div>
+                            <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;margin-left:12px;cursor:pointer">
+                                <input type="checkbox" ${checked ? 'checked' : ''} onchange="cbToggleFeature('${f.key}', this.checked)"
+                                    style="opacity:0;width:0;height:0">
+                                <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:${checked ? '#48bb78' : '#cbd5e0'};transition:0.3s;border-radius:24px"></span>
+                                <span style="position:absolute;content:'';height:18px;width:18px;left:${checked ? '22px' : '3px'};bottom:3px;background:white;transition:0.3s;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></span>
+                            </label>
+                        </div>
+                    `;
+                });
+
+                html += '</div></div>';
+            });
+
+            // "All on / All off" shortcuts
+            html += `
+                <div style="display:flex;gap:8px;margin-top:8px;margin-bottom:8px">
+                    <button class="btn btn-sm btn-outline" onclick="cbSetAll(true)">Tümünü Aç</button>
+                    <button class="btn btn-sm btn-outline" onclick="cbSetAll(false)">Tümünü Kapat</button>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            cbUpdateSaveBtn();
+        }
+
+        function cbToggleFeature(key, value) {
+            cbSettingsState.features[key] = value;
+            cbSettingsState.dirty = true;
+            cbRenderFeatures();
+        }
+
+        function cbSetAll(value) {
+            Object.keys(cbSettingsState.features).forEach(k => {
+                cbSettingsState.features[k] = value;
+            });
+            cbSettingsState.dirty = true;
+            cbRenderFeatures();
+        }
+
+        function cbUpdateSaveBtn() {
+            const btn = document.getElementById('cbSaveBtn');
+            if (!btn) return;
+            btn.disabled = !cbSettingsState.dirty || cbSettingsState.saving;
+            btn.textContent = cbSettingsState.saving ? 'Kaydediliyor...' : 'Kaydet';
+        }
+
+        async function cbSaveSettings() {
+            if (cbSettingsState.saving) return;
+            cbSettingsState.saving = true;
+            cbUpdateSaveBtn();
+
+            const group = cbSettingsState.groups.find(g => g.id === cbSettingsState.selectedGroupId);
+            if (!group) return;
+
+            // Build updated data_permissions
+            const perms = { ...(group.data_permissions || {}) };
+            perms.rag_enabled = cbSettingsState.features['_rag_enabled'];
+            perms.product_db_enabled = cbSettingsState.features['_product_db_enabled'];
+            perms.odoo_enabled = cbSettingsState.features['_odoo_enabled'];
+
+            const chatFeatures = {};
+            CHATBOT_FEATURE_SCHEMA.forEach(cat => {
+                cat.features.forEach(f => {
+                    if (!f.key.startsWith('_')) {
+                        chatFeatures[f.key] = cbSettingsState.features[f.key];
+                    }
+                });
+            });
+            perms.chatbot_features = chatFeatures;
+
+            try {
+                const resp = await fetch(`${API}/api/admin/source-groups/${cbSettingsState.selectedGroupId}`, {
+                    method: 'PUT',
+                    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data_permissions: perms }),
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.detail || `HTTP ${resp.status}`);
+                }
+
+                const updated = await resp.json();
+                // Update local state
+                const idx = cbSettingsState.groups.findIndex(g => g.id === cbSettingsState.selectedGroupId);
+                if (idx >= 0) cbSettingsState.groups[idx] = updated;
+
+                cbSettingsState.dirty = false;
+                cbSettingsState.saving = false;
+                cbRenderFeatures();
+
+                // Success toast
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#48bb78;color:white;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.15)';
+                toast.textContent = 'Ayarlar başarıyla kaydedildi';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            } catch (e) {
+                cbSettingsState.saving = false;
+                cbUpdateSaveBtn();
+                alert('Kaydetme hatası: ' + e.message);
+            }
         }
 
         // ── Social Media Dashboard ──────────────────────────────

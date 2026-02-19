@@ -66,6 +66,34 @@ _DELIVERY_STATE_TR = {
     "assigned": "Hazir", "done": "Teslim Edildi", "cancel": "Iptal",
 }
 
+# Maps each Intent to a chatbot_features key for granular toggle control.
+# If an intent is not listed here, it is always allowed.
+INTENT_FEATURE_MAP: dict[Intent, str] = {
+    Intent.ORDER_HISTORY: "order_view",
+    Intent.ORDER_DETAIL: "order_view",
+    Intent.ORDER_STATUS: "order_view",
+    Intent.ORDER_CREATE: "order_create",
+    Intent.QUOTE_REQUEST: "order_create",
+    Intent.ORDER_CANCEL: "order_cancel",
+    Intent.INVOICE_LIST: "invoice_view",
+    Intent.INVOICE_DETAIL: "invoice_view",
+    Intent.INVOICE_DOWNLOAD: "invoice_download",
+    Intent.PAYMENT_STATUS: "payment_view",
+    Intent.PAYMENT_HISTORY: "payment_view",
+    Intent.DELIVERY_TRACKING: "delivery_tracking",
+    Intent.PROFILE_VIEW: "profile_view",
+    Intent.PROFILE_UPDATE: "profile_update",
+    Intent.ADDRESS_UPDATE: "profile_update",
+    Intent.SUPPORT_TICKET_CREATE: "support_ticket",
+    Intent.SUPPORT_TICKET_LIST: "support_ticket",
+    Intent.COMPLAINT: "complaint",
+    Intent.SPENDING_REPORT: "spending_report",
+    Intent.CATALOG_REQUEST: "catalog_request",
+    Intent.FIND_DEALER: "find_dealer",
+}
+
+_FEATURE_DISABLED_MSG = "Bu özellik şu anda devre dışıdır. Lütfen başka bir konuda yardımcı olabileceğim bir soru sorun."
+
 
 class ChatService:
     """Orchestrator: receives user messages, routes to RAG/ProductDB/Odoo, calls LLM."""
@@ -152,6 +180,15 @@ class ChatService:
             pass
         return default_perms
 
+    @staticmethod
+    def _is_feature_enabled(perms: dict, intent: Intent) -> bool:
+        """Check if a chatbot feature is enabled for the given intent."""
+        feature_key = INTENT_FEATURE_MAP.get(intent)
+        if not feature_key:
+            return True
+        features = perms.get("chatbot_features", {})
+        return features.get(feature_key, True)
+
     async def process_message(
         self,
         user_message: str,
@@ -211,18 +248,27 @@ class ChatService:
             text = await self._handle_logout(visitor_id)
             return await self._save_and_return(conv, text, intent, [], None)
 
+        # Feature toggle check for non-auth intents
+        perms = await self._load_source_group_permissions(source_group_id)
+
         if intent == Intent.CATALOG_REQUEST:
+            if not self._is_feature_enabled(perms, intent):
+                return await self._save_and_return(conv, _FEATURE_DISABLED_MSG, intent, [], None)
             text = self._build_catalog_response(user_message)
             return await self._save_and_return(conv, text, intent, [], None)
 
         # Complaint flow (no auth required)
         if intent == Intent.COMPLAINT:
+            if not self._is_feature_enabled(perms, intent):
+                return await self._save_and_return(conv, _FEATURE_DISABLED_MSG, intent, [], None)
             flow_msg = await self._maybe_start_flow(intent, conv_id_str, visitor_id)
             if flow_msg:
                 return await self._save_and_return(conv, flow_msg, intent, [], None)
 
         # Find Dealer flow (no auth required)
         if intent == Intent.FIND_DEALER:
+            if not self._is_feature_enabled(perms, intent):
+                return await self._save_and_return(conv, _FEATURE_DISABLED_MSG, intent, [], None)
             flow_msg = await self._maybe_start_flow(intent, conv_id_str, visitor_id)
             if flow_msg:
                 return await self._save_and_return(conv, flow_msg, intent, [], None)
@@ -230,10 +276,13 @@ class ChatService:
         # Customer auth gate
         if intent.requires_customer_auth:
             # Check if source group allows Odoo access
-            perms = await self._load_source_group_permissions(source_group_id)
             if not perms.get("odoo_enabled", True):
                 text = "Bu hizmet bu kanal üzerinden kullanılamamaktadır. Lütfen müşteri portalınızı kullanın."
                 return await self._save_and_return(conv, text, intent, [], None)
+
+            # Granular feature toggle check
+            if not self._is_feature_enabled(perms, intent):
+                return await self._save_and_return(conv, _FEATURE_DISABLED_MSG, intent, [], None)
 
             session = None
             if self.customer_session and visitor_id:
@@ -386,9 +435,15 @@ class ChatService:
             await self._save_assistant_message(conv.id, text, intent, [], None)
             return
 
+        # Feature toggle check (loaded once for streaming path)
+        perms = await self._load_source_group_permissions(source_group_id)
+
         # --- Step 4.5: Catalog request (direct response, no LLM) ---
         if intent == Intent.CATALOG_REQUEST:
-            text = self._build_catalog_response(user_message)
+            if not self._is_feature_enabled(perms, intent):
+                text = _FEATURE_DISABLED_MSG
+            else:
+                text = self._build_catalog_response(user_message)
             yield {"type": "stream_start", "message_id": message_id}
             yield {"type": "stream_chunk", "content": text, "message_id": message_id}
             yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": intent.value}
@@ -397,6 +452,12 @@ class ChatService:
 
         # --- Step 4.6: Complaint flow (no auth required) ---
         if intent == Intent.COMPLAINT:
+            if not self._is_feature_enabled(perms, intent):
+                yield {"type": "stream_start", "message_id": message_id}
+                yield {"type": "stream_chunk", "content": _FEATURE_DISABLED_MSG, "message_id": message_id}
+                yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": intent.value}
+                await self._save_assistant_message(conv.id, _FEATURE_DISABLED_MSG, intent, [], None)
+                return
             flow_msg = await self._maybe_start_flow(intent, conv_id_str, visitor_id)
             if flow_msg:
                 yield {"type": "stream_start", "message_id": message_id}
@@ -407,6 +468,12 @@ class ChatService:
 
         # --- Step 4.7: Find Dealer flow (no auth required) ---
         if intent == Intent.FIND_DEALER:
+            if not self._is_feature_enabled(perms, intent):
+                yield {"type": "stream_start", "message_id": message_id}
+                yield {"type": "stream_chunk", "content": _FEATURE_DISABLED_MSG, "message_id": message_id}
+                yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": intent.value}
+                await self._save_assistant_message(conv.id, _FEATURE_DISABLED_MSG, intent, [], None)
+                return
             flow_msg = await self._maybe_start_flow(intent, conv_id_str, visitor_id)
             if flow_msg:
                 yield {"type": "stream_start", "message_id": message_id}
@@ -418,13 +485,20 @@ class ChatService:
         # --- Step 5: Customer auth gate for restricted intents ---
         if intent.requires_customer_auth:
             # Check if source group allows Odoo access
-            perms = await self._load_source_group_permissions(source_group_id)
             if not perms.get("odoo_enabled", True):
                 text = "Bu hizmet bu kanal üzerinden kullanılamamaktadır. Lütfen müşteri portalınızı kullanın."
                 yield {"type": "stream_start", "message_id": message_id}
                 yield {"type": "stream_chunk", "content": text, "message_id": message_id}
                 yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": intent.value}
                 await self._save_assistant_message(conv.id, text, intent, [], None)
+                return
+
+            # Granular feature toggle check
+            if not self._is_feature_enabled(perms, intent):
+                yield {"type": "stream_start", "message_id": message_id}
+                yield {"type": "stream_chunk", "content": _FEATURE_DISABLED_MSG, "message_id": message_id}
+                yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": intent.value}
+                await self._save_assistant_message(conv.id, _FEATURE_DISABLED_MSG, intent, [], None)
                 return
 
             session = None
