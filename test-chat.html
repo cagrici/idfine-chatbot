@@ -417,6 +417,59 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #ccc;
         }
+
+        /* ── Product Images ── */
+        .chat-img-thumb {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin: 8px 0 4px;
+            cursor: pointer;
+            display: block;
+            object-fit: cover;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .chat-img-thumb:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        /* ── Lightbox ── */
+        .chat-lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            animation: lb-in 0.2s ease;
+        }
+        @keyframes lb-in { from { opacity: 0; } to { opacity: 1; } }
+        .chat-lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 10px;
+            object-fit: contain;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+            cursor: default;
+        }
+        .chat-lightbox-close {
+            position: absolute;
+            top: 18px; right: 18px;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-lightbox-close:hover { background: rgba(255,255,255,0.3); }
     </style>
 </head>
 
@@ -766,8 +819,40 @@
             }, 30);
         }
 
+        function openLightbox(src) {
+            const overlay = document.createElement('div');
+            overlay.className = 'chat-lightbox';
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'chat-lightbox-close';
+            closeBtn.setAttribute('aria-label', 'Kapat');
+            closeBtn.textContent = '\u00d7';
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = 'Ürün görseli';
+            overlay.appendChild(closeBtn);
+            overlay.appendChild(img);
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay || e.target.closest('.chat-lightbox-close')) {
+                    overlay.remove();
+                }
+            });
+            document.body.appendChild(overlay);
+        }
+
+        document.addEventListener('click', function(e) {
+            const img = e.target.closest('.chat-img-thumb');
+            if (img) openLightbox(img.getAttribute('data-full') || img.src);
+        });
+
         function renderMarkdown(text) {
             if (!text) return '';
+            // Extract images before HTML-escaping
+            const imgData = [];
+            text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function(_, alt, url) {
+                const i = imgData.length;
+                imgData.push({ alt: alt, url: url });
+                return '%%IMG' + i + '%%';
+            });
             let html = text
                 .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             // Headings
@@ -804,6 +889,13 @@
             html = html.replace(/<\/h[34]>\s*<br>/g, function (m) { return m.replace(/<br>/, ''); });
             html = html.replace(/<\/ul>\s*<br>/g, '</ul>');
             html = html.replace(/<\/ol>\s*<br>/g, '</ol>');
+            // Restore image placeholders as safe img elements (URLs come from product DB)
+            imgData.forEach(function(d, i) {
+                const safeUrl = d.url.replace(/"/g, '%22');
+                const safeAlt = d.alt.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                html = html.replace('%%IMG' + i + '%%',
+                    '<img class="chat-img-thumb" src="' + safeUrl + '" alt="' + safeAlt + '" data-full="' + safeUrl + '" loading="lazy">');
+            });
             return html;
         }
 
