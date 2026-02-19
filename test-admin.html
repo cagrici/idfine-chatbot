@@ -1439,7 +1439,7 @@
 
         async function downloadProductTemplate() {
             try {
-                const res = await fetch(API + '/admin/products/template', {
+                const res = await fetch(API + '/api/admin/products/template', {
                     headers: { 'Authorization': 'Bearer ' + token },
                 });
                 if (!res.ok) { alert('Şablon indirilemedi'); return; }
@@ -1464,7 +1464,7 @@
             fd.append('file', file);
 
             try {
-                const res = await fetch(API + '/admin/products/import', {
+                const res = await fetch(API + '/api/admin/products/import', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + token },
                     body: fd,
