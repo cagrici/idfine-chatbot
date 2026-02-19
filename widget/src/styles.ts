@@ -408,6 +408,37 @@ export function getStyles(config: WidgetConfig): string {
       stroke: white;
     }
 
+    /* ── Inline Action Buttons ── */
+    .idf-msg-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .idf-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border: 1.5px solid ${brandColor};
+      border-radius: 20px;
+      background: #fff;
+      color: ${brandColor};
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .idf-action-btn:hover {
+      background: ${brandColor};
+      color: white;
+    }
+
     /* ── Input Area ── */
     .idf-input-area {
       padding: 10px 14px;

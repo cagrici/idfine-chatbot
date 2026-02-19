@@ -2,7 +2,7 @@ import { LOGO_DARK_DATA_URI, LOGO_LIGHT_DATA_URI } from "./assets";
 import { renderMarkdown } from "./markdown";
 import { getStyles } from "./styles";
 import { WebSocketClient } from "./WebSocketClient";
-import type { ChatMessage, Source, WidgetConfig, WSIncoming } from "./types";
+import type { ActionButton, ChatMessage, Source, WidgetConfig, WSIncoming } from "./types";
 
 export class ChatWidget {
   private shadow: ShadowRoot;
@@ -270,7 +270,7 @@ export class ChatWidget {
         if (data.conversation_id) {
           this.conversationId = data.conversation_id;
         }
-        this.finalizeMessage(data.message_id, data.sources, data.intent);
+        this.finalizeMessage(data.message_id, data.sources, data.intent, data.actions);
         this.sendBtn.disabled = false;
         this.textarea.disabled = false;
         this.textarea.focus();
@@ -494,13 +494,15 @@ export class ChatWidget {
   private finalizeMessage(
     messageId: string,
     sources: Source[],
-    intent: string
+    intent: string,
+    actions?: ActionButton[]
   ) {
     const msg = this.messages.find((m) => m.id === messageId);
     if (msg) {
       msg.content = this.currentStreamContent;
       msg.sources = sources;
       msg.intent = intent;
+      msg.actions = actions;
       msg.isStreaming = false;
     }
 
@@ -509,6 +511,25 @@ export class ChatWidget {
       el.classList.remove("streaming");
       el.innerHTML = renderMarkdown(this.currentStreamContent);
 
+      // Render action buttons if provided
+      if (actions && actions.length > 0) {
+        const actionsDiv = document.createElement("div");
+        actionsDiv.className = "idf-msg-actions";
+        actions.forEach((action) => {
+          const btn = document.createElement("button");
+          btn.className = "idf-action-btn";
+          btn.textContent = action.label;
+          btn.addEventListener("click", () => {
+            // Remove buttons after click
+            actionsDiv.remove();
+            // Send as user message
+            this.textarea.value = action.message;
+            this.sendMessage();
+          });
+          actionsDiv.appendChild(btn);
+        });
+        el.appendChild(actionsDiv);
+      }
     }
   }
 

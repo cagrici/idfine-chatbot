@@ -13,12 +13,18 @@ export interface WidgetConfig {
   triggerSize?: number;
 }
 
+export interface ActionButton {
+  label: string;
+  message: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
   sources?: Source[];
   intent?: string;
+  actions?: ActionButton[];
   timestamp: Date;
   isStreaming?: boolean;
 }
@@ -52,6 +58,7 @@ export interface WSStreamEnd {
   conversation_id?: string;
   sources: Source[];
   intent: string;
+  actions?: ActionButton[];
 }
 
 export interface WSError {

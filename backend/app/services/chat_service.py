@@ -94,6 +94,16 @@ INTENT_FEATURE_MAP: dict[Intent, str] = {
 
 _FEATURE_DISABLED_MSG = "Bu özellik şu anda devre dışıdır. Lütfen başka bir konuda yardımcı olabileceğim bir soru sorun."
 
+_PRICE_GUEST_MSG = (
+    "Ürün fiyatları adet, kullanım alanı ve ürün tipine göre değişiklik göstermektedir. "
+    "Bu nedenle bireysel fiyat paylaşımı yapılmamaktadır.\n\n"
+    "Fiyat bilgisi almak için aşağıdaki seçeneklerden birini kullanabilirsiniz:"
+)
+_PRICE_GUEST_ACTIONS = [
+    {"label": "Bayi Bul", "message": "Bayi bulmak istiyorum"},
+    {"label": "Talep Bırak", "message": "Fiyat teklifi almak istiyorum"},
+]
+
 
 class ChatService:
     """Orchestrator: receives user messages, routes to RAG/ProductDB/Odoo, calls LLM."""
@@ -250,6 +260,17 @@ class ChatService:
 
         # Feature toggle check for non-auth intents
         perms = await self._load_source_group_permissions(source_group_id)
+
+        # Price/stock inquiry gate for guest users
+        if intent in (Intent.PRICE_INQUIRY, Intent.STOCK_CHECK):
+            has_session = False
+            if self.customer_session and visitor_id:
+                session = await self.customer_session.get_session(visitor_id)
+                has_session = session is not None
+            if not has_session:
+                result = await self._save_and_return(conv, _PRICE_GUEST_MSG, intent, [], None)
+                result["actions"] = _PRICE_GUEST_ACTIONS
+                return result
 
         if intent == Intent.CATALOG_REQUEST:
             if not self._is_feature_enabled(perms, intent):
@@ -437,6 +458,21 @@ class ChatService:
 
         # Feature toggle check (loaded once for streaming path)
         perms = await self._load_source_group_permissions(source_group_id)
+
+        # --- Step 4.4: Price/stock inquiry gate for guest users ---
+        if intent in (Intent.PRICE_INQUIRY, Intent.STOCK_CHECK):
+            has_session = False
+            if self.customer_session and visitor_id:
+                session = await self.customer_session.get_session(visitor_id)
+                has_session = session is not None
+            if not has_session:
+                text = _PRICE_GUEST_MSG
+                actions = _PRICE_GUEST_ACTIONS
+                yield {"type": "stream_start", "message_id": message_id}
+                yield {"type": "stream_chunk", "content": text, "message_id": message_id}
+                yield {"type": "stream_end", "message_id": message_id, "conversation_id": conv_id_str, "sources": [], "intent": intent.value, "actions": actions}
+                await self._save_assistant_message(conv.id, text, intent, [], None)
+                return
 
         # --- Step 4.5: Catalog request (direct response, no LLM) ---
         if intent == Intent.CATALOG_REQUEST:
