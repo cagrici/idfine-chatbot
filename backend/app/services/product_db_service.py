@@ -209,6 +209,8 @@ class ProductDBService:
                     parts.append(f"  Stok: {stok_val} adet")
                 else:
                     parts.append("  Stok: Tükendi")
+            if p.get('menu_ana_baslik'):
+                parts.append(f"  Menü Uyumu: {p['menu_ana_baslik']}")
             if p.get('servis_tipi'):
                 parts.append(f"  Servis Tipi: {p['servis_tipi']}")
             if p.get('yemek_onerileri'):
@@ -247,6 +249,7 @@ class ProductDBService:
             "mutfak_uyumu": p.mutfak_uyumu,
             "yemek_onerileri": p.yemek_onerileri,
             "konsept_etiketler": p.konsept_etiketler,
+            "menu_ana_baslik": p.menu_ana_baslik,
             "istiflenebilirlik": p.istiflenebilirlik,
             "dayanim_seviyesi": p.dayanim_seviyesi,
             "image_url": p.image,
