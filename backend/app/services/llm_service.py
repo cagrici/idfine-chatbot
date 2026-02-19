@@ -82,9 +82,9 @@ class LLMService:
 Sadece kategori adını döndür, başka bir şey yazma.
 
 Kategoriler:
-- PRODUCT_INFO: Ürün özellikleri, malzeme, boyut, koleksiyon bilgisi
-- PRICE_INQUIRY: Fiyat sorgusu
-- STOCK_CHECK: Stok durumu sorgusu
+- PRODUCT_INFO: Ürün özellikleri, malzeme, boyut, koleksiyon, renk, tip bilgisi; ürün kodu/stok kodu/referans numarası ile ürün arama veya ürün hakkında genel bilgi isteme
+- PRICE_INQUIRY: Fiyat sorgusu (ne kadar, fiyatı nedir, fiyat listesi)
+- STOCK_CHECK: Stok DURUMU sorgusu — ürünün var mı yok mu, kaç adet kaldı (NOT: "stok kodu" ile ürün arayanlar PRODUCT_INFO)
 - QUOTE_REQUEST: Teklif isteme
 - GENERAL_INFO: Firma, marka, sektör hakkında genel bilgi, selamlaşma
 - HYBRID: Hem ürün bilgisi hem fiyat/stok birlikte
@@ -106,7 +106,11 @@ Kategoriler:
 - CUSTOMER_AUTH: Giriş yap, kimlik doğrula
 - CUSTOMER_LOGOUT: Çıkış yap
 
-ÖNEMLİ: Selamlaşma, teşekkür, hoşça kal → GENERAL_INFO. Sipariş/fatura/kargo/profil gibi kişisel müşteri sorguları ilgili kategoriye.
+ÖNEMLİ:
+- Selamlaşma, teşekkür, hoşça kal → GENERAL_INFO
+- Sipariş/fatura/kargo/profil gibi kişisel müşteri sorguları ilgili kategoriye
+- "stok kodu", "ürün kodu", "referans no" ile ürün BİLGİSİ isteyen → PRODUCT_INFO (stok sorgusu değil)
+- Fiyat kelimesi geçmiyorsa PRICE_INQUIRY seçme
 
 Kullanıcı mesajı: """
 
